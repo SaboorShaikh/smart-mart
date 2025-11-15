@@ -1,0 +1,29 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "smart-mart-81ebe",
+          "appId": "1:1042891968517:android:78b0e97d6c6659b5edcc6c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "smart-mart-81ebe",
+          "configurations": {
+            "android": "1:1042891968517:android:78b0e97d6c6659b5edcc6c",
+            "web": "1:1042891968517:web:0a03408577c15ae0edcc6c"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

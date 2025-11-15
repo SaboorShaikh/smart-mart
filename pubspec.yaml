@@ -1,0 +1,94 @@
+name: smart_mart
+description: A smart marketplace app for vendors and customers
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.2
+  
+  # Navigation
+  go_router: ^16.2.1
+  
+  # Local Storage
+  shared_preferences: ^2.2.3
+  
+  # HTTP & API
+  http: ^1.2.2
+  flutter_appauth: ^6.0.5
+  supabase_flutter: ^2.6.0
+  
+  # UI Components
+  cupertino_icons: ^1.0.8
+  flutter_svg: ^2.0.10+1
+  country_picker: ^2.0.25
+  
+  # Charts
+  fl_chart: ^1.1.0
+  
+  # Image handling
+  cached_network_image: ^3.4.1
+  image_picker: ^1.1.2
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  
+  # Icons
+  lucide_icons: ^0.257.0
+  
+  # Utils
+  intl: ^0.20.2
+  
+  # State Management & Navigation
+  get: ^4.6.6
+  
+  # Firebase
+  firebase_core: ^4.1.0
+  firebase_auth: ^6.0.2
+  cloud_firestore: ^6.0.1
+  firebase_storage: ^13.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # Ensure high quality rendering for PNG assets
+  assets:
+    - assets/icons/home.png
+    - assets/icons/dashboard.png
+    - assets/icons/products.png
+    - assets/icons/cart.png
+    - assets/icons/orders.png
+    - assets/icons/profile_avatar.png
+    - assets/icons/search.png
+    - assets/icons/notification.png
+    - assets/icons/location.png
+    - assets/icons/map_icon.png
+    - assets/icons/add.png
+    - assets/icons/edit_icon.png
+    - assets/icons/edit_card.png
+    - assets/icons/delete_card.png
+    - assets/icons/help.png
+    - assets/icons/about.png
+    - assets/icons/payment_methods.png
+    - assets/icons/promo.png
+    - assets/icons/point_of_sale.png
+    - assets/icons/total_sale.png
+    - assets/icons/average_order_value.png
+    - assets/icons/store settings.png
+    - assets/icons/analytics.png
+    - assets/icons/shop_smart.png
+    - assets/icons/sell_easy.png
+    - assets/icons/fast_delivery.png
+    - assets/category_icons/

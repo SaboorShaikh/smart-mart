@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1042891968517",
+    "project_id": "smart-mart-81ebe",
+    "storage_bucket": "smart-mart-81ebe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1042891968517:android:78b0e97d6c6659b5edcc6c",
+        "android_client_info": {
+          "package_name": "com.abdulsaboor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1ASh3eQVzapDbFZMntN5FfwCf9Jq6Qs4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
