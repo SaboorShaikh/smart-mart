@@ -57,6 +57,7 @@ class AppIcons {
   static const String map = 'assets/icons/map_icon.png';
   static const String add = 'assets/icons/add.png';
   static const String edit = 'assets/icons/edit_icon.png';
+  static const String camera = 'assets/icons/camera.png';
 
   // Menu icons
   static const String help = 'assets/icons/help.png';

@@ -132,7 +132,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
         vendorNotifications.where((n) => !n.isRead).length;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF4F4F5),
       appBar: AppBar(
         title: Text('Dashboard'),
         backgroundColor: Colors.transparent,
@@ -445,107 +445,69 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
     required Widget icon,
     required Color color,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Calculate responsive sizes based on card width
-          final cardWidth = constraints.maxWidth;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth;
+        final valueFontSize = cardWidth * 0.18;
+        final titleFontSize = cardWidth * 0.09;
+        final iconSize = cardWidth * 0.24;
 
-          // Responsive font sizes - adjust to card size to prevent overflow
-          final valueFontSize =
-              cardWidth * 0.14; // 14% of card width (increased)
-          final titleFontSize = cardWidth * 0.08; // 8% of card width
-          final iconSize = cardWidth * 0.24; // 24% of card width (increased)
-
-          return Column(
-            children: [
-              // Upper section with darker green background
-              Expanded(
-                flex: 3,
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF16A34A)
-                        .withOpacity(0.15), // Lighter green
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(cardWidth * 0.08),
-                    child: Row(
-                      children: [
-                        // Icon on the left with responsive padding
-                        Container(
-                          padding: EdgeInsets.all(iconSize * 0.3),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: SizedBox(
-                            width: iconSize,
-                            height: iconSize,
-                            child: icon,
-                          ),
-                        ),
-                        SizedBox(width: cardWidth * 0.08),
-                        // Value column on the right
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                value,
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
-                                  fontSize: valueFontSize,
-                                ),
-                                maxLines: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // Bottom section with white background and rounded top corners
-              Expanded(
-                flex: 1,
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F5F5), // Light gray
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      title,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: titleFontSize,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                    ),
-                  ),
-                ),
+        return Container(
+          padding: EdgeInsets.all(cardWidth * 0.08),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               ),
             ],
-          );
-        },
-      ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: iconSize,
+                    height: iconSize,
+                    child: IconTheme(
+                      data: IconThemeData(color: color, size: iconSize),
+                      child: icon,
+                    ),
+                  ),
+                  SizedBox(width: cardWidth * 0.08),
+                  Expanded(
+                    child: Text(
+                      value,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                        fontSize: valueFontSize,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: cardWidth * 0.08),
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  fontSize: titleFontSize,
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -620,7 +582,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: theme.colorScheme.outline.withOpacity(0.2),
@@ -858,7 +820,7 @@ class _VendorDashboardContentState extends State<VendorDashboardContent>
         vendorNotifications.where((n) => !n.isRead).length;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF4F4F5),
       appBar: AppBar(
         title: const Text('Dashboard'),
         backgroundColor: Colors.transparent,
@@ -990,37 +952,42 @@ class _VendorDashboardContentState extends State<VendorDashboardContent>
               ],
             ),
             const SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.25,
+            Column(
               children: [
-                _VendorQuickActionTile(
-                  theme: theme,
-                  icon: CustomIcon(assetPath: AppIcons.add, size: 28),
-                  title: 'Add Product',
-                  onTap: () => Get.toNamed('/vendor/add-product-stepper'),
+                Row(
+                  children: [
+                    _VendorQuickActionLink(
+                      theme: theme,
+                      icon: CustomIcon(assetPath: AppIcons.add, size: 24),
+                      title: 'Add Product',
+                      onTap: () => Get.toNamed('/vendor/add-product-stepper'),
+                    ),
+                    const SizedBox(width: 12),
+                    _VendorQuickActionLink(
+                      theme: theme,
+                      icon: CustomIcon(assetPath: AppIcons.products, size: 24),
+                      title: 'Manage Products',
+                      onTap: () => Get.toNamed('/vendor/products'),
+                    ),
+                  ],
                 ),
-                _VendorQuickActionTile(
-                  theme: theme,
-                  icon: CustomIcon(assetPath: AppIcons.products, size: 28),
-                  title: 'Manage Products',
-                  onTap: () => Get.toNamed('/vendor/products'),
-                ),
-                _VendorQuickActionTile(
-                  theme: theme,
-                  icon: CustomIcon(assetPath: AppIcons.orders, size: 28),
-                  title: 'View Orders',
-                  onTap: () => Get.toNamed('/vendor/orders'),
-                ),
-                _VendorQuickActionTile(
-                  theme: theme,
-                  icon: CustomIcon(assetPath: AppIcons.pointOfSale, size: 28),
-                  title: 'POS System',
-                  onTap: () => Get.toNamed('/vendor/pos'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _VendorQuickActionLink(
+                      theme: theme,
+                      icon: CustomIcon(assetPath: AppIcons.orders, size: 24),
+                      title: 'View Orders',
+                      onTap: () => Get.toNamed('/vendor/orders'),
+                    ),
+                    const SizedBox(width: 12),
+                    _VendorQuickActionLink(
+                      theme: theme,
+                      icon: CustomIcon(assetPath: AppIcons.pointOfSale, size: 24),
+                      title: 'POS System',
+                      onTap: () => Get.toNamed('/vendor/pos'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1220,7 +1187,7 @@ class _VendorStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.colorScheme.outline.withOpacity(0.12)),
         boxShadow: [
@@ -1248,16 +1215,9 @@ class _VendorStatCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: IconTheme(
-                  data: IconThemeData(color: color, size: 22),
-                  child: icon,
-                ),
+              IconTheme(
+                data: IconThemeData(color: color, size: 22),
+                child: icon,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1281,13 +1241,13 @@ class _VendorStatCard extends StatelessWidget {
 
 // (Old _VendorQuickActionItem removed in favor of tile layout)
 
-class _VendorQuickActionTile extends StatelessWidget {
+class _VendorQuickActionLink extends StatelessWidget {
   final ThemeData theme;
   final Widget icon;
   final String title;
   final VoidCallback onTap;
 
-  const _VendorQuickActionTile({
+  const _VendorQuickActionLink({
     required this.theme,
     required this.icon,
     required this.title,
@@ -1296,42 +1256,31 @@ class _VendorQuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.12),
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-              child: IconTheme(
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          child: Row(
+            children: [
+              IconTheme(
                 data: IconThemeData(
                   color: theme.colorScheme.primary,
-                  size: 24,
+                  size: 22,
                 ),
                 child: icon,
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1396,7 +1345,7 @@ class _VendorActivityItem extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: theme.colorScheme.outline.withOpacity(0.2),

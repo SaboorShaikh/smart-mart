@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_icon.dart';
 import 'my_details_screen.dart';
+import 'add_payment_method_screen.dart';
 import 'notifications_screen.dart';
 import '../../widgets/custom_card.dart';
 
@@ -65,10 +66,12 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       debugPrint('Avatar starts with /: ${user.avatar!.startsWith('/')}');
     }
 
+    const lightGreyBackground = Color(0xFFF5F5F5);
+
     // Show loading if user is not loaded yet
     if (authProvider.isLoading) {
       return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: lightGreyBackground,
         appBar: AppBar(
           title: const Text('Profile'),
           backgroundColor: Colors.transparent,
@@ -83,7 +86,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     // Show error if user is not found
     if (user == null) {
       return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: lightGreyBackground,
         appBar: AppBar(
           title: const Text('Profile'),
           backgroundColor: Colors.transparent,
@@ -122,12 +125,22 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: lightGreyBackground,
       appBar: AppBar(
         title: const Text('Profile'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: const Icon(LucideIcons.pencil),
+              onPressed: () => Get.toNamed('/customer/edit-profile'),
+              tooltip: 'Edit Profile',
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -135,128 +148,104 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header
-            CustomCard(
-              color: Colors.grey[100],
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Builder(
-                    builder: (context) {
-                      debugPrint(
-                          'Customer Profile - Builder called with user.avatar: ${user.avatar}');
-                      return CircleAvatar(
-                        radius: 28,
-                        backgroundColor: theme.colorScheme.primary,
-                        child: user.avatar != null && user.avatar!.isNotEmpty
-                            ? ClipOval(
-                                child: Image.network(
-                                  _getCacheBustedUrl(user.avatar!),
-                                  width: 56,
-                                  height: 56,
-                                  fit: BoxFit.cover,
-                                  headers: {
-                                    'Cache-Control': 'max-age=0',
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    debugPrint(
-                                        'Customer Profile - Image load error: $error');
-                                    return Text(
-                                      _getInitials(user.name),
-                                      style:
-                                          theme.textTheme.titleLarge?.copyWith(
+            Row(
+              children: [
+                Builder(
+                  builder: (context) {
+                    debugPrint(
+                        'Customer Profile - Builder called with user.avatar: ${user.avatar}');
+                    return CircleAvatar(
+                      radius: 28,
+                      backgroundColor: theme.colorScheme.primary,
+                      child: user.avatar != null && user.avatar!.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
+                                _getCacheBustedUrl(user.avatar!),
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.cover,
+                                headers: {
+                                  'Cache-Control': 'max-age=0',
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  debugPrint(
+                                      'Customer Profile - Image load error: $error');
+                                  return Text(
+                                    _getInitials(user.name),
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  );
+                                },
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    width: 56,
+                                    height: 56,
+                                    color: theme.colorScheme.primary,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress
+                                                    .expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                            : null,
                                         color: Colors.white,
-                                        fontWeight: FontWeight.w700,
                                       ),
-                                    );
-                                  },
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      width: 56,
-                                      height: 56,
-                                      color: theme.colorScheme.primary,
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          value: loadingProgress
-                                                      .expectedTotalBytes !=
-                                                  null
-                                              ? loadingProgress
-                                                      .cumulativeBytesLoaded /
-                                                  loadingProgress
-                                                      .expectedTotalBytes!
-                                              : null,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : Text(
-                                _getInitials(user.name),
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                    ),
+                                  );
+                                },
                               ),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                user.name.isNotEmpty == true
-                                    ? (user.name)
-                                    : 'User',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            )
+                          : Text(
+                              _getInitials(user.name),
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            InkWell(
-                              onTap: () {
-                                debugPrint('Edit button tapped');
-                                Get.toNamed('/customer/edit-profile');
-                              },
-                              child: Icon(
-                                LucideIcons.pencil,
-                                size: 18,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ],
+                    );
+                  },
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.name.isNotEmpty == true ? (user.name) : 'User',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 4),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user.email,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (user is Customer &&
+                          (user.address?.isNotEmpty ?? false)) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          user.email,
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          (user).address!,
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (user is Customer &&
-                            (user.address?.isNotEmpty ?? false)) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            (user).address!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),
@@ -300,7 +289,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                 _MenuItem(
                     iconAsset: AppIcons.creditCard,
                     title: 'Payment Methods',
-                    onTap: () {}),
+                    onTap: () => Get.to(() => const AddPaymentMethodScreen())),
                 _MenuItem(
                     iconAsset: AppIcons.tag, title: 'Promo Code', onTap: () {}),
                 _MenuItem(
@@ -335,12 +324,13 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       {required List<_MenuItem> items}) {
     final theme = Theme.of(context);
     return CustomCard(
-      color: Colors.grey[100],
+      color: Colors.white,
       padding: EdgeInsets.zero,
       child: Column(
         children: [
           for (int i = 0; i < items.length; i++) ...[
             ListTile(
+              tileColor: Colors.white,
               leading: items[i].iconAsset != null
                   ? CustomIcon(
                       assetPath: items[i].iconAsset!,
@@ -353,10 +343,6 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               title: Text(
                 items[i].title,
                 style: theme.textTheme.bodyLarge,
-              ),
-              trailing: Icon(
-                LucideIcons.chevronRight,
-                color: theme.colorScheme.onSurfaceVariant,
               ),
               onTap: items[i].onTap,
             ),

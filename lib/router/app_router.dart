@@ -14,6 +14,7 @@ import '../screens/customer/browse_screen.dart';
 import '../screens/customer/cart_screen.dart';
 import '../screens/customer/orders_screen.dart';
 import '../screens/customer/profile_screen.dart';
+import '../screens/customer/add_payment_method_screen.dart';
 import '../screens/customer/edit_profile_screen.dart';
 import '../screens/customer/notifications_screen.dart';
 import '../screens/vendor/vendor_main_screen.dart';
@@ -144,6 +145,10 @@ class AppRouter {
           GoRoute(
             path: 'profile',
             builder: (context, state) => const CustomerProfileScreen(),
+          ),
+          GoRoute(
+            path: 'payment-methods',
+            builder: (context, state) => const AddPaymentMethodScreen(),
           ),
           GoRoute(
             path: 'edit-profile',

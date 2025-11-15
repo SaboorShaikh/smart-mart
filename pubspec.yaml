@@ -86,6 +86,7 @@ flutter:
     - assets/icons/point_of_sale.png
     - assets/icons/total_sale.png
     - assets/icons/average_order_value.png
+    - assets/icons/camera.png
     - assets/icons/store settings.png
     - assets/icons/analytics.png
     - assets/icons/shop_smart.png

@@ -1,18 +1,29 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/data_provider.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_card.dart';
 import '../../widgets/custom_icon.dart';
+import '../../services/firestore_service.dart';
+import '../../services/image_upload_service.dart';
+import '../../supabase_config.dart';
 import '../customer/notifications_screen.dart';
 
-class VendorProfileScreen extends StatelessWidget {
+class VendorProfileScreen extends StatefulWidget {
   const VendorProfileScreen({super.key});
 
+  @override
+  State<VendorProfileScreen> createState() => _VendorProfileScreenState();
+}
+
+class _VendorProfileScreenState extends State<VendorProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -20,18 +31,20 @@ class VendorProfileScreen extends StatelessWidget {
     final dataProvider = Provider.of<DataProvider>(context, listen: true);
     final user = authProvider.user;
     final vendor = user is Vendor ? user : null;
+    final vendorRating = vendor?.rating ?? 0;
+    final shopName = vendor?.shopName ?? user?.name ?? 'Vendor';
+    final shopLogo = vendor?.shopLogo;
 
     // Compute simple stats for header cards
-    final vendorOrders = dataProvider.orders
-        .where((o) => o.vendorId == user?.id)
-        .toList();
-    final completedOrders = vendorOrders
-        .where((o) => o.status == 'completed')
-        .toList();
-    final totalRevenue = completedOrders.fold<double>(0.0, (sum, order) => sum + order.total);
+    final vendorOrders =
+        dataProvider.orders.where((o) => o.vendorId == user?.id).toList();
+    final completedOrders =
+        vendorOrders.where((o) => o.status == 'completed').toList();
+    final totalRevenue =
+        completedOrders.fold<double>(0.0, (sum, order) => sum + order.total);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF4F4F5),
       appBar: AppBar(
         title: const Text('Profile'),
         backgroundColor: Colors.transparent,
@@ -41,138 +54,174 @@ class VendorProfileScreen extends StatelessWidget {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Column(
               children: [
                 // Profile Header
-                CustomCard(
-                  color: Colors.grey[100],
-                  child: Column(
-                    children: [
-                      Builder(
-                        builder: (context) {
-                          debugPrint(
-                              'Vendor Profile - Builder called with user?.avatar: ${user?.avatar}');
-                          return CircleAvatar(
-                            radius: 40,
-                            backgroundColor: theme.colorScheme.primary,
-                            child: user?.avatar != null &&
-                                    user!.avatar!.isNotEmpty
-                                ? ClipOval(
-                                    child: Image.network(
-                                      _getCacheBustedUrl(user.avatar!),
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                      headers: {
-                                        'Cache-Control': 'max-age=0',
-                                      },
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        debugPrint(
-                                            'Vendor Profile - Image load error: $error');
-                                        return Text(
-                                          user.name
-                                              .substring(0, 1)
-                                              .toUpperCase(),
-                                          style: theme.textTheme.headlineMedium
-                                              ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        );
-                                      },
-                                      loadingBuilder:
-                                          (context, child, loadingProgress) {
-                                        if (loadingProgress == null) {
-                                          return child;
-                                        }
-                                        return Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: theme.colorScheme.primary,
-                                          child: Center(
-                                            child: CircularProgressIndicator(
-                                              value: loadingProgress
-                                                          .expectedTotalBytes !=
-                                                      null
-                                                  ? loadingProgress
-                                                          .cumulativeBytesLoaded /
-                                                      loadingProgress
-                                                          .expectedTotalBytes!
-                                                  : null,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        debugPrint(
+                            'Vendor Profile - Builder called with shopLogo: $shopLogo');
+                        final logoToUse = shopLogo ?? user?.avatar;
+                        final fallbackInitial = shopName.isNotEmpty
+                            ? shopName[0].toUpperCase()
+                            : 'V';
+                        const double avatarRadius = 54;
+                        const double avatarSize = avatarRadius * 2;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            CircleAvatar(
+                              radius: avatarRadius,
+                              backgroundColor: theme.colorScheme.primary,
+                              child: logoToUse != null && logoToUse.isNotEmpty
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        _getCacheBustedUrl(logoToUse),
+                                        width: avatarSize,
+                                        height: avatarSize,
+                                        fit: BoxFit.cover,
+                                        headers: const {
+                                          'Cache-Control': 'max-age=0',
+                                        },
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          debugPrint(
+                                              'Vendor Profile - Logo load error: $error');
+                                          return Text(
+                                            fallbackInitial,
+                                            style: theme
+                                                .textTheme.headlineMedium
+                                                ?.copyWith(
                                               color: Colors.white,
+                                              fontWeight: FontWeight.w700,
                                             ),
-                                          ),
-                                        );
-                                      },
+                                          );
+                                        },
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                          if (loadingProgress == null) {
+                                            return child;
+                                          }
+                                          return Container(
+                                            width: avatarSize,
+                                            height: avatarSize,
+                                            color: theme.colorScheme.primary,
+                                            child: Center(
+                                              child: CircularProgressIndicator(
+                                                value: loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                            .cumulativeBytesLoaded /
+                                                        loadingProgress
+                                                            .expectedTotalBytes!
+                                                    : null,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : Text(
+                                      fallbackInitial,
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  )
-                                : Text(
-                                    user?.name.substring(0, 1).toUpperCase() ??
-                                        'V',
-                                    style: theme.textTheme.headlineMedium
-                                        ?.copyWith(
+                            ),
+                            Positioned(
+                              bottom: -4,
+                              right: -4,
+                              child: GestureDetector(
+                                onTap: () => _showLogoOptions(context),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: const Color(0xFFE9EAED),
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: CustomIcon(
+                                      assetPath: AppIcons.camera,
+                                      size: 20,
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                          );
-                        },
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      shopName,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        user?.name ?? 'Vendor',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user?.email ?? '',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        user?.email ?? '',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
 
                 // Stats summary (Rating, Orders, Revenue)
-                CustomCard(
-                  color: Colors.grey[100],
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _StatChip(
-                          label: 'Rating',
-                          value: '4.8', // Placeholder; hook to real ratings if available
-                          icon: LucideIcons.star,
-                          iconColor: Colors.amber[700]!,
-                        ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatChip(
+                        label: 'Rating',
+                        value: vendorRating.toStringAsFixed(1),
+                        icon: LucideIcons.star,
+                        iconColor: Colors.amber[700]!,
+                        showIconNextToValue: true,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _StatChip(
-                          label: 'Total Orders',
-                          value: completedOrders.length.toString(),
-                          icon: LucideIcons.shoppingCart,
-                          iconColor: theme.colorScheme.primary,
-                        ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatChip(
+                        label: 'Total Orders',
+                        value: completedOrders.length.toString(),
+                        icon: LucideIcons.shoppingCart,
+                        iconColor: theme.colorScheme.primary,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _StatChip(
-                          label: 'Revenue',
-                          value: '₨${totalRevenue.toStringAsFixed(0)}',
-                          icon: LucideIcons.banknote,
-                          iconColor: theme.colorScheme.secondary,
-                        ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _StatChip(
+                        label: 'Revenue',
+                        value: '₨${totalRevenue.toStringAsFixed(0)}',
+                        icon: LucideIcons.banknote,
+                        iconColor: theme.colorScheme.secondary,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
 
@@ -184,12 +233,13 @@ class VendorProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         'Business Information',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),
                   CustomCard(
-                    color: Colors.grey[100],
+                    color: Colors.white,
                     child: Column(
                       children: [
                         _buildKeyValueItem(
@@ -197,22 +247,27 @@ class VendorProfileScreen extends StatelessWidget {
                           iconAsset: AppIcons.store,
                           label: 'Business Name',
                           value: vendor.shopName,
+                          useOriginalIconColors: true,
                         ),
-                        const Divider(height: 1, thickness: 1, color: Colors.black12),
+                        const Divider(
+                            height: 1, thickness: 1, color: Colors.black12),
                         _buildKeyValueItem(
                           theme,
                           iconAsset: AppIcons.location,
                           label: 'Store Address',
                           value: vendor.shopAddress,
+                          useOriginalIconColors: true,
                         ),
-                        const Divider(height: 1, thickness: 1, color: Colors.black12),
+                        const Divider(
+                            height: 1, thickness: 1, color: Colors.black12),
                         _buildKeyValueItem(
                           theme,
                           icon: LucideIcons.phone,
                           label: 'Contact Number',
                           value: vendor.shopPhone,
                         ),
-                        const Divider(height: 1, thickness: 1, color: Colors.black12),
+                        const Divider(
+                            height: 1, thickness: 1, color: Colors.black12),
                         _buildKeyValueItem(
                           theme,
                           icon: LucideIcons.mail,
@@ -242,78 +297,95 @@ class VendorProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
                       'Account Information',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
                 CustomCard(
-                  color: Colors.grey[100],
+                  color: Colors.white,
                   child: Column(
                     children: [
-                      _buildMenuItem(
-                        theme,
-                        iconAsset: AppIcons.profile,
-                        title: 'Edit Profile',
-                        onTap: () => Get.toNamed('/customer/edit-profile'),
-                      ),
-                      const Divider(height: 1, thickness: 1, color: Colors.black12),
-                      _buildMenuItem(
-                        theme,
-                        iconAsset: AppIcons.products,
-                        title: 'Manage Products',
-                        onTap: () => Get.toNamed('/vendor/products'),
-                      ),
-                      const Divider(height: 1, thickness: 1, color: Colors.black12),
-                      _buildMenuItem(
-                        theme,
-                        iconAsset: AppIcons.analytics,
-                        title: 'View Earnings',
-                        onTap: () => Get.toNamed('/vendor/analytics'),
-                      ),
-                      const Divider(height: 1, thickness: 1, color: Colors.black12),
-                      _buildMenuItem(
-                        theme,
-                        iconAsset: AppIcons.bell,
-                        title: 'Notifications',
-                        onTap: () {
-                          debugPrint('VendorProfileScreen: Navigating to notifications screen');
-                          debugPrint('VendorProfileScreen: Current route: ${Get.currentRoute}');
+                        _buildMenuItem(
+                          theme,
+                          iconAsset: AppIcons.profile,
+                          title: 'Edit Profile',
+                          onTap: () => Get.toNamed('/customer/edit-profile'),
+                          useOriginalIconColors: true,
+                        ),
+                      const Divider(
+                          height: 1, thickness: 1, color: Colors.black12),
+                        _buildMenuItem(
+                          theme,
+                          iconAsset: AppIcons.products,
+                          title: 'Manage Products',
+                          onTap: () => Get.toNamed('/vendor/products'),
+                          useOriginalIconColors: true,
+                        ),
+                      const Divider(
+                          height: 1, thickness: 1, color: Colors.black12),
+                        _buildMenuItem(
+                          theme,
+                          iconAsset: AppIcons.analytics,
+                          title: 'View Earnings',
+                          onTap: () => Get.toNamed('/vendor/analytics'),
+                          useOriginalIconColors: true,
+                        ),
+                      const Divider(
+                          height: 1, thickness: 1, color: Colors.black12),
+                        _buildMenuItem(
+                          theme,
+                          iconAsset: AppIcons.bell,
+                          title: 'Notifications',
+                          useOriginalIconColors: true,
+                          onTap: () {
+                          debugPrint(
+                              'VendorProfileScreen: Navigating to notifications screen');
+                          debugPrint(
+                              'VendorProfileScreen: Current route: ${Get.currentRoute}');
                           try {
                             Get.to(() => const NotificationsScreen());
-                            debugPrint('VendorProfileScreen: Navigation successful');
+                            debugPrint(
+                                'VendorProfileScreen: Navigation successful');
                           } catch (e) {
-                            debugPrint('VendorProfileScreen: Navigation error: $e');
+                            debugPrint(
+                                'VendorProfileScreen: Navigation error: $e');
                             // Fallback to named route
                             Get.toNamed('/vendor/notifications');
                           }
                         },
                       ),
-                      const Divider(height: 1, thickness: 1, color: Colors.black12),
-                      _buildMenuItem(
-                        theme,
-                        iconAsset: AppIcons.store,
-                        title: 'Store Settings',
-                        onTap: () => Get.toNamed('/vendor/store-settings'),
-                      ),
-                      const Divider(height: 1, thickness: 1, color: Colors.black12),
-                      _buildMenuItem(
-                        theme,
-                        iconAsset: AppIcons.analytics,
-                        title: 'Analytics',
-                        onTap: () {
-                          debugPrint(
-                              'VendorProfileScreen: Navigating to analytics screen');
-                          try {
-                            Get.toNamed('/vendor/analytics');
+                      const Divider(
+                          height: 1, thickness: 1, color: Colors.black12),
+                        _buildMenuItem(
+                          theme,
+                          iconAsset: AppIcons.store,
+                          title: 'Store Settings',
+                          onTap: () => Get.toNamed('/vendor/store-settings'),
+                          useOriginalIconColors: true,
+                        ),
+                      const Divider(
+                          height: 1, thickness: 1, color: Colors.black12),
+                        _buildMenuItem(
+                          theme,
+                          iconAsset: AppIcons.analytics,
+                          title: 'Analytics',
+                          useOriginalIconColors: true,
+                          onTap: () {
                             debugPrint(
-                                'VendorProfileScreen: Analytics navigation successful');
-                          } catch (e) {
-                            debugPrint(
-                                'VendorProfileScreen: Analytics navigation error: $e');
-                          }
-                        },
-                      ),
-                      const Divider(height: 1, thickness: 1, color: Colors.black12),
+                                'VendorProfileScreen: Navigating to analytics screen');
+                            try {
+                              Get.toNamed('/vendor/analytics');
+                              debugPrint(
+                                  'VendorProfileScreen: Analytics navigation successful');
+                            } catch (e) {
+                              debugPrint(
+                                  'VendorProfileScreen: Analytics navigation error: $e');
+                            }
+                          },
+                        ),
+                      const Divider(
+                          height: 1, thickness: 1, color: Colors.black12),
                       _buildMenuItem(
                         theme,
                         iconAsset: AppIcons.help,
@@ -331,7 +403,8 @@ class VendorProfileScreen extends StatelessWidget {
                           }
                         },
                       ),
-                      const Divider(height: 1, thickness: 1, color: Colors.black12),
+                      const Divider(
+                          height: 1, thickness: 1, color: Colors.black12),
                       // Switch to Buying (also available as a tile)
                       _buildMenuItem(
                         theme,
@@ -360,32 +433,262 @@ class VendorProfileScreen extends StatelessWidget {
     );
   }
 
+  void _showLogoOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Store Logo',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Icon(
+                    LucideIcons.image,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text('Change Logo'),
+                  subtitle: const Text('Upload a new store logo'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _handleChangeLogo(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    LucideIcons.trash2,
+                    color: theme.colorScheme.error,
+                  ),
+                  title: const Text('Delete Logo'),
+                  subtitle: const Text('Remove current logo'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _handleDeleteLogo(context);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleChangeLogo(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final vendor = authProvider.user;
+    if (vendor is! Vendor) {
+      _showSnack(context, 'Only vendors can update store logo', isError: true);
+      return;
+    }
+
+    final ImagePicker picker = ImagePicker();
+    XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+
+    image ??= await picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+
+    if (image == null) {
+      return;
+    }
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
+    _showLoadingDialog(context);
+
+    try {
+      final imageFile = File(image.path);
+
+      if (vendor.shopLogo != null && vendor.shopLogo!.isNotEmpty) {
+        await _deleteLogoFromStorage(vendor.shopLogo!);
+      }
+
+      final uploadedUrl = await ImageUploadService.uploadStoreLogo(
+        imageFile: imageFile,
+        storeId: vendor.id,
+      );
+
+      if (uploadedUrl == null) {
+        throw Exception('Upload failed');
+      }
+
+      await FirestoreService.updateUser(vendor.id, {'shopLogo': uploadedUrl});
+      await authProvider.loadCurrentUser();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Store logo updated successfully')),
+      );
+    } catch (e) {
+      debugPrint('VendorProfileScreen: Error updating store logo: $e');
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('Failed to update store logo'),
+          backgroundColor: errorColor,
+        ),
+      );
+    } finally {
+      navigator.pop();
+    }
+  }
+
+  Future<void> _handleDeleteLogo(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final vendor = authProvider.user;
+    if (vendor is! Vendor) {
+      _showSnack(context, 'Only vendors can update store logo', isError: true);
+      return;
+    }
+
+    if (vendor.shopLogo == null || vendor.shopLogo!.isEmpty) {
+      _showSnack(context, 'No store logo to delete');
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Store Logo'),
+        content: const Text(
+            'Are you sure you want to delete the current store logo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
+    _showLoadingDialog(context);
+
+    try {
+      await _deleteLogoFromStorage(vendor.shopLogo!);
+      await FirestoreService.updateUser(vendor.id, {'shopLogo': null});
+      await authProvider.loadCurrentUser();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Store logo deleted')),
+      );
+    } catch (e) {
+      debugPrint('VendorProfileScreen: Error deleting store logo: $e');
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('Failed to delete store logo'),
+          backgroundColor: errorColor,
+        ),
+      );
+    } finally {
+      navigator.pop();
+    }
+  }
+
+  Future<void> _deleteLogoFromStorage(String logoUrl) async {
+    try {
+      final filePath = _extractLogoFilePath(logoUrl);
+      if (filePath == null) return;
+      await Supabase.instance.client.storage
+          .from(SupabaseConfig.storeLogosBucket)
+          .remove([filePath]);
+    } catch (e) {
+      debugPrint('VendorProfileScreen: Error removing logo from storage: $e');
+    }
+  }
+
+  String? _extractLogoFilePath(String logoUrl) {
+    try {
+      final uri = Uri.parse(logoUrl);
+      final segments = uri.pathSegments;
+      final bucketIndex = segments.indexOf(SupabaseConfig.storeLogosBucket);
+      if (bucketIndex != -1 && bucketIndex + 2 < segments.length) {
+        final storeId = segments[bucketIndex + 1];
+        final fileName = segments[bucketIndex + 2];
+        return '$storeId/$fileName';
+      }
+    } catch (e) {
+      debugPrint('VendorProfileScreen: Error parsing logo URL: $e');
+    }
+    return null;
+  }
+
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  void _showSnack(BuildContext context, String message,
+      {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Theme.of(context).colorScheme.error : null,
+      ),
+    );
+  }
+
   Widget _buildMenuItem(
     ThemeData theme, {
     IconData? icon,
     String? iconAsset,
     required String title,
     required VoidCallback onTap,
+    bool useOriginalIconColors = false,
   }) {
     return ListTile(
       leading: iconAsset != null
           ? CustomIcon(
               assetPath: iconAsset,
-              size: 24,
-              color: theme.colorScheme.onSurfaceVariant,
+              size: 28,
+              color:
+                  useOriginalIconColors ? null : theme.colorScheme.onSurfaceVariant,
             )
           : Icon(
               icon,
-              color: theme.colorScheme.onSurfaceVariant,
+              color:
+                  useOriginalIconColors ? null : theme.colorScheme.onSurfaceVariant,
             ),
       title: Text(
         title,
         style: theme.textTheme.bodyLarge,
       ),
-      trailing: Icon(
-        LucideIcons.chevronRight,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
+      trailing: const SizedBox.shrink(),
       onTap: onTap,
     );
   }
@@ -396,17 +699,27 @@ class VendorProfileScreen extends StatelessWidget {
     String? iconAsset,
     required String label,
     required String value,
+    bool useOriginalIconColors = false,
   }) {
     return ListTile(
       leading: iconAsset != null
           ? CustomIcon(
               assetPath: iconAsset,
-              size: 22,
-              color: theme.colorScheme.onSurfaceVariant,
+              size: 26,
+              color:
+                  useOriginalIconColors ? null : theme.colorScheme.onSurfaceVariant,
             )
-          : Icon(icon, color: theme.colorScheme.onSurfaceVariant),
-      title: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-      subtitle: Text(value, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+          : Icon(
+              icon,
+              color:
+                  useOriginalIconColors ? null : theme.colorScheme.onSurfaceVariant,
+            ),
+      title: Text(label,
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      subtitle: Text(value,
+          style:
+              theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
     );
   }
 
@@ -607,12 +920,14 @@ class _StatChip extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color iconColor;
+  final bool showIconNextToValue;
 
   const _StatChip({
     required this.label,
     required this.value,
     required this.icon,
     required this.iconColor,
+    this.showIconNextToValue = false,
   });
 
   @override
@@ -624,7 +939,15 @@ class _StatChip extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.black12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
+      constraints: const BoxConstraints(minHeight: 96),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -636,10 +959,23 @@ class _StatChip extends StatelessWidget {
             softWrap: true,
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style:
-                theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (showIconNextToValue)
+                Icon(
+                  icon,
+                  color: iconColor,
+                  size: 18,
+                ),
+            ],
           ),
         ],
       ),

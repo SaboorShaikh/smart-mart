@@ -16,6 +16,7 @@ import 'screens/auth/customer_account_screen.dart';
 import 'screens/auth/customer_phone_screen.dart';
 import 'screens/customer/customer_home_screen.dart';
 import 'screens/customer/edit_profile_screen.dart';
+import 'screens/customer/add_payment_method_screen.dart';
 import 'screens/customer/browse_screen.dart';
 import 'screens/customer/cart_screen.dart';
 import 'screens/customer/orders_screen.dart';
@@ -165,6 +166,9 @@ class SmartMartApp extends StatelessWidget {
               GetPage(
                   name: '/customer/profile',
                   page: () => const CustomerProfileScreen()),
+              GetPage(
+                  name: '/customer/payment-methods',
+                  page: () => const AddPaymentMethodScreen()),
               GetPage(
                   name: '/customer/notifications',
                   page: () => const NotificationsScreen()),
