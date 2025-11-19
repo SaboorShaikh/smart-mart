@@ -5,7 +5,9 @@ import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../providers/data_provider.dart';
 import '../../widgets/product_card.dart';
+import '../../widgets/skeleton_loaders.dart';
 import '../../data/categories.dart';
+import '../../services/notification_service.dart';
 
 class BrowseScreen extends StatefulWidget {
   const BrowseScreen({super.key});
@@ -17,6 +19,7 @@ class BrowseScreen extends StatefulWidget {
 class _BrowseScreenState extends State<BrowseScreen> {
   final _searchController = TextEditingController();
   final List<String> _selectedCategories = [];
+  bool _isInitialLoad = true;
   final List<String> _categories = [
     'All',
     ...Categories.getAllCategoryDisplayNames()
@@ -27,6 +30,27 @@ class _BrowseScreenState extends State<BrowseScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Provider.of<DataProvider>(context, listen: false).loadData();
+      // Check data loading state after a short delay
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          final dataProvider = Provider.of<DataProvider>(context, listen: false);
+          // If we have products or enough time has passed, stop showing skeleton
+          if (dataProvider.realProducts.isNotEmpty) {
+            setState(() {
+              _isInitialLoad = false;
+            });
+          } else {
+            // Wait a bit more for data to load
+            Future.delayed(const Duration(milliseconds: 1200), () {
+              if (mounted) {
+                setState(() {
+                  _isInitialLoad = false;
+                });
+              }
+            });
+          }
+        }
+      });
     });
   }
 
@@ -39,11 +63,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dataProvider = Provider.of<DataProvider>(context);
-
-    final activeProducts =
-        dataProvider.realProducts.where((p) => p.isActive).toList();
-    final filteredProducts = _filterProducts(activeProducts);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -61,79 +80,85 @@ class _BrowseScreenState extends State<BrowseScreen> {
             child: Column(
               children: [
                 // Search Bar with integrated category filter
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search products...',
-                    prefixIcon: const Icon(LucideIcons.search),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Category filter button
-                        IconButton(
-                          onPressed: _showCategoryPicker,
-                          icon: Stack(
-                            clipBehavior: Clip.none,
+                Consumer<DataProvider>(
+                  builder: (context, dataProvider, _) {
+                    return _isInitialLoad && dataProvider.realProducts.isEmpty
+                        ? const SearchBarSkeleton()
+                        : TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search products...',
+                          prefixIcon: const Icon(LucideIcons.search),
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(LucideIcons.filter, size: 30),
-                              if (_selectedCategories.isNotEmpty)
-                                Positioned(
-                                  right: -1,
-                                  top: -1,
-                                  child: Builder(
-                                    builder: (context) {
-                                      // Base icon size assumption (now explicitly 30 to match Icon)
-                                      const double filterIconSize = 30;
-                                      final double badgeDiameter =
-                                          filterIconSize *
-                                              0.4; // increased from 30% to 40%
-                                      final String badgeText =
-                                          _selectedCategories.length > 9
-                                              ? '9+'
-                                              : '${_selectedCategories.length}';
-                                      return Container(
-                                        width: badgeDiameter,
-                                        height: badgeDiameter,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.primary,
-                                          shape: BoxShape.circle,
+                              // Category filter button
+                              IconButton(
+                                onPressed: _showCategoryPicker,
+                                icon: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    const Icon(LucideIcons.filter, size: 30),
+                                    if (_selectedCategories.isNotEmpty)
+                                      Positioned(
+                                        right: -1,
+                                        top: -1,
+                                        child: Builder(
+                                          builder: (context) {
+                                            // Base icon size assumption (now explicitly 30 to match Icon)
+                                            const double filterIconSize = 30;
+                                            final double badgeDiameter =
+                                                filterIconSize *
+                                                    0.4; // increased from 30% to 40%
+                                            final String badgeText =
+                                                _selectedCategories.length > 9
+                                                    ? '9+'
+                                                    : '${_selectedCategories.length}';
+                                            return Container(
+                                              width: badgeDiameter,
+                                              height: badgeDiameter,
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme.primary,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                badgeText,
+                                                style: TextStyle(
+                                                  color: theme.colorScheme.onPrimary,
+                                                  fontSize: filterIconSize *
+                                                      0.34, // increased font to match larger badge
+                                                  fontWeight: FontWeight.w700,
+                                                  height: 1.0,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        child: Text(
-                                          badgeText,
-                                          style: TextStyle(
-                                            color: theme.colorScheme.onPrimary,
-                                            fontSize: filterIconSize *
-                                                0.34, // increased font to match larger badge
-                                            fontWeight: FontWeight.w700,
-                                            height: 1.0,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                      ),
+                                  ],
+                                ),
+                                tooltip: 'Filter by category',
+                              ),
+                              // Clear search button
+                              if (_searchController.text.isNotEmpty)
+                                IconButton(
+                                  icon: const Icon(LucideIcons.x),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {});
+                                  },
                                 ),
                             ],
                           ),
-                          tooltip: 'Filter by category',
-                        ),
-                        // Clear search button
-                        if (_searchController.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(LucideIcons.x),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {});
-                            },
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                      ],
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onChanged: (value) => setState(() {}),
+                        ),
+                        onChanged: (value) => setState(() {}),
+                      );
+                  },
                 ),
 
                 // Selected categories chips
@@ -203,8 +228,31 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
           // Products Grid
           Expanded(
-            child: filteredProducts.isEmpty
-                ? Center(
+            child: Consumer<DataProvider>(
+              builder: (context, dataProvider, _) {
+                final activeProducts =
+                    dataProvider.realProducts.where((p) => p.isActive).toList();
+                final filteredProducts = _filterProducts(activeProducts);
+
+                if (_isInitialLoad && dataProvider.realProducts.isEmpty) {
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.65,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: 6, // Show 6 skeleton cards
+                    itemBuilder: (context, index) {
+                      return const ProductCardSkeleton();
+                    },
+                  );
+                }
+
+                if (filteredProducts.isEmpty) {
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -229,27 +277,31 @@ class _BrowseScreenState extends State<BrowseScreen> {
                         ),
                       ],
                     ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio:
-                          0.65, // Increased to accommodate larger cards
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = filteredProducts[index];
-                      return ProductCard(
-                        product: product,
-                        onTap: () => Get.toNamed('/product/${product.id}'),
-                        onAddToCart: () => _addToCart(product),
-                      );
-                    },
+                  );
+                }
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio:
+                        0.65, // Increased to accommodate larger cards
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
                   ),
+                  itemCount: filteredProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = filteredProducts[index];
+                    return ProductCard(
+                      product: product,
+                      onTap: () => Get.toNamed('/product/${product.id}'),
+                      onAddToCart: () => _addToCart(product),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -565,11 +617,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
   void _addToCart(product) {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     dataProvider.addToCart(product, 1);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} added to cart!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
+    NotificationService.showAddedToCart(product.name);
   }
 }

@@ -44,6 +44,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_config.dart';
 import 'services/supabase_test_service.dart';
 import 'services/bucket_test_service.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,6 +82,8 @@ Future<void> main() async {
 class SmartMartApp extends StatelessWidget {
   const SmartMartApp({super.key});
 
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -90,7 +93,11 @@ class SmartMartApp extends StatelessWidget {
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
+          // Initialize notification service with navigator key
+          NotificationService.init(navigatorKey);
+          
           return GetMaterialApp(
+            navigatorKey: navigatorKey,
             title: 'SmartMart',
             theme: AppTheme.lightTheme,
             debugShowCheckedModeBanner: false,

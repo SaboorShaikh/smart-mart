@@ -12,6 +12,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import '../../widgets/product_card.dart';
 import '../../models/user.dart';
+import '../../widgets/skeleton_loaders.dart';
 import 'browse_screen.dart';
 import 'cart_screen.dart';
 import 'orders_screen.dart';
@@ -119,6 +120,7 @@ class _HomeContent extends StatefulWidget {
 class _HomeContentState extends State<_HomeContent>
     with TickerProviderStateMixin {
   String? _cityDisplay;
+  bool _isInitialLoad = true;
   final ScrollController _scrollController = ScrollController();
   final PageController _bannerController =
       PageController(viewportFraction: 0.88);
@@ -182,6 +184,27 @@ class _HomeContentState extends State<_HomeContent>
   void initState() {
     super.initState();
     _loadLocation();
+    // Check data loading state after a short delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        final dataProvider = Provider.of<DataProvider>(context, listen: false);
+        // If we have products or enough time has passed, stop showing skeleton
+        if (dataProvider.realProducts.isNotEmpty) {
+          setState(() {
+            _isInitialLoad = false;
+          });
+        } else {
+          // Wait a bit more for data to load
+          Future.delayed(const Duration(milliseconds: 1200), () {
+            if (mounted) {
+              setState(() {
+                _isInitialLoad = false;
+              });
+            }
+          });
+        }
+      }
+    });
   }
 
   @override
@@ -213,32 +236,54 @@ class _HomeContentState extends State<_HomeContent>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTopBar(theme),
+                    _isInitialLoad
+                        ? const TopBarSkeleton()
+                        : _buildTopBar(theme),
                     const SizedBox(height: 20),
-                    _buildSearchBar(theme),
+                    _isInitialLoad
+                        ? const SearchBarSkeleton()
+                        : _buildSearchBar(theme),
                     const SizedBox(height: 20),
-                    _buildPromoCarousel(theme),
+                    _isInitialLoad
+                        ? const PromoCarouselSkeleton()
+                        : _buildPromoCarousel(theme),
                     const SizedBox(height: 28),
                     Consumer<DataProvider>(
                       builder: (_, dataProvider, __) {
+                        final isLoading = _isInitialLoad && dataProvider.realProducts.isEmpty;
+                        if (isLoading) {
+                          return _buildMartNearMeSkeleton(theme);
+                        }
                         return _buildMartNearMe(theme, dataProvider);
                       },
                     ),
                     const SizedBox(height: 28),
                     Consumer<DataProvider>(
                       builder: (_, dataProvider, __) {
+                        final isLoading = _isInitialLoad && dataProvider.realProducts.isEmpty;
+                        if (isLoading) {
+                          return _buildFeaturedProductsSkeleton(theme);
+                        }
                         return _buildFeaturedProducts(theme, dataProvider);
                       },
                     ),
                     const SizedBox(height: 28),
                     Consumer<DataProvider>(
                       builder: (_, dataProvider, __) {
+                        final isLoading = _isInitialLoad && dataProvider.realProducts.isEmpty;
+                        if (isLoading) {
+                          return _buildBestSellingSkeleton(theme);
+                        }
                         return _buildBestSelling(theme, dataProvider);
                       },
                     ),
                     const SizedBox(height: 28),
                     Consumer<DataProvider>(
                       builder: (_, dataProvider, __) {
+                        final isLoading = _isInitialLoad && dataProvider.realProducts.isEmpty;
+                        if (isLoading) {
+                          return _buildGroceriesSkeleton(theme);
+                        }
                         return _buildGroceries(theme, dataProvider);
                       },
                     ),
@@ -788,6 +833,100 @@ class _HomeContentState extends State<_HomeContent>
               return _MartCard(vendor: vendor);
             },
           ),
+        ),
+      ],
+    );
+  }
+
+  // Skeleton loader methods
+  Widget _buildMartNearMeSkeleton(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeaderSkeleton(),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 210,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(left: 4, right: 4),
+            itemCount: 3,
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              return const MartCardSkeleton();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeaturedProductsSkeleton(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeaderSkeleton(),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 240,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: 3,
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              return const ProductCardSkeleton(width: 180);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBestSellingSkeleton(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeaderSkeleton(),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 240,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: 3,
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              return const ProductCardSkeleton(width: 180);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroceriesSkeleton(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeaderSkeleton(),
+        const SizedBox(height: 16),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.65,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: 4,
+          itemBuilder: (context, index) {
+            return const ProductCardSkeleton();
+          },
         ),
       ],
     );

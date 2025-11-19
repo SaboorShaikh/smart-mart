@@ -10,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/custom_icon.dart';
 import '../../models/product.dart';
 import '../../theme/app_theme.dart';
+import '../../services/notification_service.dart';
 import 'add_product_stepper_screen.dart';
 
 enum ProductFilter { all, active, outOfStock, onSale }
@@ -610,7 +611,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final theme = Theme.of(context);
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final messenger = ScaffoldMessenger.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -692,81 +692,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
 
     if (confirmed == true) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.onPrimary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text('Deleting "$name"...'),
-            ],
-          ),
-          backgroundColor: theme.colorScheme.primary,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-
       try {
         debugPrint('Starting product deletion for ID: $productId');
         await dataProvider.deleteProduct(productId);
         debugPrint('Product deletion completed successfully');
 
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  LucideIcons.checkCircle,
-                  color: theme.colorScheme.onPrimary,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text('Successfully deleted "$name"'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        NotificationService.showProductDeleted(name);
 
         if (authProvider.user != null) {
           await dataProvider.loadVendorProducts(authProvider.user!.id);
         }
       } catch (e) {
         debugPrint('Error deleting product: $e');
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  LucideIcons.alertCircle,
-                  color: theme.colorScheme.onError,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Failed to delete product: ${e.toString()}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            backgroundColor: theme.colorScheme.error,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: theme.colorScheme.onError,
-              onPressed: () => _confirmDelete(context, productId, name),
-            ),
-          ),
+        NotificationService.showError(
+          message: 'Failed to delete product: ${e.toString()}',
         );
       }
     }

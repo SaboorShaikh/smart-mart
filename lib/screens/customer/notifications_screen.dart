@@ -39,6 +39,7 @@ class NotificationsScreen extends StatelessWidget {
     final notifications = data.notifications;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F5F7), // Light gray background
       appBar: AppBar(
         title: const Text('Notifications'),
         backgroundColor: Colors.transparent,
@@ -95,6 +96,12 @@ class NotificationsScreen extends StatelessWidget {
                     );
                   },
                   child: CustomCard(
+                    color: Colors.white, // White background for notification tiles
+                    elevation: 2, // Little elevation for the tiles
+                    border: Border.all(
+                      color: Colors.grey.withOpacity(0.2),
+                      width: 1,
+                    ),
                     padding: const EdgeInsets.all(14),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,

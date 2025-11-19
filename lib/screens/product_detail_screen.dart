@@ -9,6 +9,7 @@ import '../widgets/custom_button.dart';
 import '../models/product.dart';
 import '../models/user.dart';
 import '../services/firestore_service.dart';
+import '../services/notification_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String? productId;
@@ -509,12 +510,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void _addToCart(Product product) {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     dataProvider.addToCart(product, _quantity);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} added to cart!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
+    NotificationService.showAddedToCart(product.name);
   }
 
   Widget _buildMediaSection(Product product, ThemeData theme) {

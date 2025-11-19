@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
+import 'dart:math' as math;
 import 'custom_icon.dart';
 
 class NavItemData {
@@ -23,11 +25,53 @@ class FloatingNavBar extends StatefulWidget {
   State<FloatingNavBar> createState() => _FloatingNavBarState();
 }
 
-class _FloatingNavBarState extends State<FloatingNavBar> {
+class _FloatingNavBarState extends State<FloatingNavBar>
+    with TickerProviderStateMixin {
   double? _dragX; // x within inner width
   bool _isDragging = false;
   bool _isPressing = false;
   int? _hoveredIndex;
+  late AnimationController _liquidController;
+  late Animation<double> _liquidAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _liquidController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _liquidAnimation = CurvedAnimation(
+      parent: _liquidController,
+      curve: Curves.easeOutCubic,
+    );
+    // Start animation after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _liquidController.forward();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(FloatingNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentIndex != widget.currentIndex) {
+      if (mounted && _liquidController.isAnimating) {
+        _liquidController.stop();
+      }
+      if (mounted) {
+        _liquidController.reset();
+        _liquidController.forward();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _liquidController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +84,10 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
         final int count = widget.items.length;
         final double totalWeight =
             selectedWeight + (count - 1) * unselectedWeight;
-        // Equal horizontal padding on both sides
+        // Equal horizontal padding on both sides - increased to prevent overflow
         const double sidePadding = 8.0;
-        final double innerWidth = (constraints.maxWidth - (sidePadding * 2))
+        const double rowPadding = 8.0; // Padding inside the Row
+        final double innerWidth = (constraints.maxWidth - (sidePadding * 2) - (rowPadding * 2))
             .clamp(0.0, double.infinity);
         final double base = innerWidth / totalWeight;
         final double selectedWidth = base * selectedWeight;
@@ -57,8 +102,9 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
           itemWidths[i] = w;
           used += w;
         }
-        // Last item takes remaining space minus epsilon to avoid RenderFlex overflow by 1-2px
-        const double epsilon = 2.0;
+        // Last item takes remaining space minus epsilon to avoid RenderFlex overflow
+        // Increased epsilon to prevent 5.1px overflow
+        const double epsilon = 6.0;
         itemWidths[count - 1] =
             (innerWidth - used - epsilon).clamp(0.0, innerWidth);
 
@@ -134,22 +180,73 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
               (itemWidths[activeIndex] - capsuleWidth) / 2;
         }
 
-        return Container(
-          height: 64,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.90),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey.withOpacity(0.15), width: 1),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 10,
-                spreadRadius: 0,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
-          child: GestureDetector(
+        // Theme-aware colors
+        final bool isDark = theme.brightness == Brightness.dark;
+        final Color baseColor = isDark 
+            ? Colors.white.withOpacity(0.08)
+            : Colors.grey.withOpacity(0.05);
+        final Color borderColor = isDark
+            ? Colors.white.withOpacity(0.15)
+            : Colors.white.withOpacity(0.3);
+        
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: AnimatedBuilder(
+              animation: _liquidAnimation,
+              builder: (context, child) {
+                // Enhanced liquid wave effect on full navbar background
+                final double waveIntensity = _liquidAnimation.value.isFinite 
+                    ? (1 - _liquidAnimation.value) * 0.5 
+                    : 0.0;
+                
+                return Container(
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: baseColor,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: borderColor,
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark 
+                            ? Colors.black.withOpacity(0.4)
+                            : Colors.black.withOpacity(0.08),
+                        blurRadius: 20 + (waveIntensity * 5),
+                        spreadRadius: waveIntensity * 2,
+                        offset: Offset(0, 8 + (waveIntensity * 2)),
+                      ),
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.white.withOpacity(0.5),
+                        blurRadius: 1,
+                        spreadRadius: 0,
+                        offset: const Offset(0, -1),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Stack(
+                      children: [
+                        // Full navbar liquid background effect
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _FullNavbarLiquidPainter(
+                              animation: _liquidAnimation,
+                              theme: theme,
+                              isDark: isDark,
+                              currentIndex: widget.currentIndex,
+                              itemCount: widget.items.length,
+                            ),
+                            child: Container(),
+                          ),
+                        ),
+                        GestureDetector(
             behavior: HitTestBehavior.opaque,
             onPanStart: (details) {
               final double panX = details.localPosition.dx - sidePadding;
@@ -195,43 +292,87 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // Sliding capsule indicator (iOS-style)
-                _isDragging || _isPressing
-                    ? Positioned(
-                        left: capsuleLeft,
-                        top: -6,
-                        width: capsuleWidth * 1.2, // Make it wider when pressed
-                        height: 72,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Color.alphaBlend(
+                // Liquid effect capsule indicator with morphing animation
+                AnimatedBuilder(
+                  animation: _liquidAnimation,
+                  builder: (context, child) {
+                    // Safety check for animation value
+                    final double animValue = _liquidAnimation.value.isFinite 
+                        ? _liquidAnimation.value 
+                        : 1.0;
+                    
+                    // Liquid morphing effect - creates wave-like deformation
+                    final double liquidOffset = 
+                        (1 - animValue) * 8.0; // Bounce effect
+                    final double liquidScale = 
+                        0.95 + (animValue * 0.05); // Scale animation
+                    final double morphFactor = 
+                        (1 - animValue) * 0.3; // Morphing factor
+                    
+                    // Calculate liquid position with elastic bounce
+                    final double currentLeft = _isDragging || _isPressing
+                        ? capsuleLeft
+                        : capsuleLeft + (liquidOffset * (1 - animValue));
+                    
+                    final double currentWidth = _isDragging || _isPressing
+                        ? capsuleWidth * 1.15
+                        : capsuleWidth * liquidScale;
+                    
+                    final double currentTop = _isDragging || _isPressing
+                        ? 6.0
+                        : 10.0 - (liquidOffset * 0.3);
+                    
+                    final double currentHeight = _isDragging || _isPressing
+                        ? 56.0
+                        : 48.0 + (liquidOffset * 0.5);
+                    
+                    // Create morphing border radius for liquid effect
+                    final double borderRadius = 20.0 - (morphFactor * 4.0);
+                    
+                    return Positioned(
+                      left: currentLeft,
+                      top: currentTop,
+                      width: currentWidth,
+                      height: currentHeight,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
                               theme.colorScheme.primary.withOpacity(
-                                  0.15), // Slightly more opaque when pressed
-                              Colors.transparent,
-                            ),
-                            borderRadius: BorderRadius.circular(18),
+                                  _isDragging || _isPressing ? 0.25 : 0.18),
+                              theme.colorScheme.primary.withOpacity(
+                                  _isDragging || _isPressing ? 0.18 : 0.12),
+                            ],
                           ),
-                        ),
-                      )
-                    : AnimatedPositioned(
-                        duration: const Duration(milliseconds: 280),
-                        curve: Curves.easeOutCubic,
-                        left: capsuleLeft,
-                        top: 8,
-                        width: capsuleWidth,
-                        height: 48,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Color.alphaBlend(
-                              theme.colorScheme.primary.withOpacity(0.10),
-                              Colors.transparent,
+                          borderRadius: BorderRadius.circular(borderRadius),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withOpacity(
+                                  _isDragging || _isPressing ? 0.2 : 0.15),
+                              blurRadius: _isDragging || _isPressing ? 8 : 6,
+                              spreadRadius: 0,
+                              offset: Offset(0, 2 + (morphFactor * 2)),
                             ),
-                            borderRadius: BorderRadius.circular(18),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(borderRadius),
+                          child: CustomPaint(
+                            painter: _LiquidWavePainter(
+                              animation: _liquidAnimation,
+                              color: theme.colorScheme.primary,
+                            ),
+                            child: Container(),
                           ),
                         ),
                       ),
+                    );
+                  },
+                ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: EdgeInsets.symmetric(horizontal: rowPadding),
                   child: Row(
                     children: [
                       for (int i = 0; i < widget.items.length; i++)
@@ -245,6 +386,13 @@ class _FloatingNavBarState extends State<FloatingNavBar> {
                   ),
                 ),
               ],
+            ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -267,52 +415,284 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: SizedBox(
-        width: width,
-        height: 64,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            data.iconAsset != null
-                ? CustomIcon(
-                    assetPath: data.iconAsset!,
-                    size: isSelected ? 33 : 23,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : const Color(0xB3000000),
-                  )
-                : Icon(
-                    data.icon,
-                    size: isSelected ? 33 : 23,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : const Color(0xB3000000),
-                  ),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 160),
-              child: isSelected
-                  ? Padding(
-                      key: const ValueKey('label'),
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Text(
-                        data.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: false,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
+    final theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    
+    // Theme-aware colors for unselected items
+    final Color unselectedColor = isDark
+        ? Colors.white.withOpacity(0.6)
+        : Colors.black.withOpacity(0.5);
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        splashColor: theme.colorScheme.primary.withOpacity(0.1),
+        highlightColor: theme.colorScheme.primary.withOpacity(0.05),
+        child: SizedBox(
+          width: width,
+          height: 68,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                child: data.iconAsset != null
+                    ? CustomIcon(
+                        assetPath: data.iconAsset!,
+                        size: isSelected ? 28 : 22,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : unselectedColor,
+                      )
+                    : Icon(
+                        data.icon,
+                        size: isSelected ? 28 : 22,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : unselectedColor,
                       ),
-                    )
-                  : const SizedBox.shrink(key: ValueKey('empty')),
-            ),
-          ],
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(-0.2, 0),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      )),
+                      child: child,
+                    ),
+                  );
+                },
+                child: isSelected
+                    ? Padding(
+                        key: const ValueKey('label'),
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Text(
+                          data.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: false,
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('empty')),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+// Custom painter for liquid wave effect
+class _LiquidWavePainter extends CustomPainter {
+  final Animation<double> animation;
+  final Color color;
+
+  _LiquidWavePainter({
+    required this.animation,
+    required this.color,
+  }) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (!animation.value.isFinite || size.width <= 0 || size.height <= 0) {
+      return;
+    }
+    
+    final paint = Paint()
+      ..color = color.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final animValue = animation.value.clamp(0.0, 1.0);
+    final waveHeight = 3.0 * (1 - animValue);
+    final waveFrequency = 2.0;
+
+    // Create wave effect at the top
+    path.moveTo(0, size.height * 0.1);
+    for (double x = 0; x <= size.width; x += 1) {
+      final y = size.height * 0.1 +
+          waveHeight *
+              math.sin((x / size.width * waveFrequency * math.pi * 2) +
+                  (animValue * math.pi * 2));
+      if (x == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.lineTo(size.width, 0);
+    path.lineTo(0, 0);
+    path.close();
+
+    // Create wave effect at the bottom
+    final bottomPath = Path();
+    bottomPath.moveTo(0, size.height * 0.9);
+    for (double x = 0; x <= size.width; x += 1) {
+      final y = size.height * 0.9 +
+          waveHeight *
+              math.sin((x / size.width * waveFrequency * math.pi * 2) +
+                  (animValue * math.pi * 2) + math.pi);
+      if (x == 0) {
+        bottomPath.moveTo(x, y);
+      } else {
+        bottomPath.lineTo(x, y);
+      }
+    }
+    bottomPath.lineTo(size.width, size.height);
+    bottomPath.lineTo(0, size.height);
+    bottomPath.close();
+
+    canvas.drawPath(path, paint);
+    canvas.drawPath(bottomPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(_LiquidWavePainter oldDelegate) {
+    return oldDelegate.animation.value != animation.value;
+  }
+}
+
+// Custom painter for full navbar liquid background effect
+class _FullNavbarLiquidPainter extends CustomPainter {
+  final Animation<double> animation;
+  final ThemeData theme;
+  final bool isDark;
+  final int currentIndex;
+  final int itemCount;
+
+  _FullNavbarLiquidPainter({
+    required this.animation,
+    required this.theme,
+    required this.isDark,
+    required this.currentIndex,
+    required this.itemCount,
+  }) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (!animation.value.isFinite || size.width <= 0 || size.height <= 0) {
+      return;
+    }
+    
+    final animValue = animation.value.clamp(0.0, 1.0);
+    final waveIntensity = (1 - animValue) * 0.4;
+    
+    // Calculate approximate position of selected item for liquid flow
+    final double itemWidth = size.width / itemCount;
+    final double selectedCenterX = (currentIndex * itemWidth) + (itemWidth / 2);
+    
+    // Create liquid gradient effect
+    final gradient = RadialGradient(
+      center: Alignment(
+        ((selectedCenterX / size.width) * 2 - 1),
+        0.0,
+      ),
+      radius: 1.5,
+      colors: [
+        theme.colorScheme.primary.withOpacity(0.15 * (1 - animValue)),
+        theme.colorScheme.primary.withOpacity(0.08 * (1 - animValue)),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.5, 1.0],
+    );
+    
+    final paint = Paint()
+      ..shader = gradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+
+    // Create multiple liquid waves across the full navbar
+    final path = Path();
+    final waveHeight = 4.0 * waveIntensity;
+    final waveFrequency = 1.2;
+    final waveSpeed = animValue * math.pi * 2;
+
+    // Top liquid wave
+    path.moveTo(0, size.height * 0.15);
+    for (double x = 0; x <= size.width; x += 1) {
+      final normalizedX = x / size.width;
+      final distanceFromCenter = (normalizedX - (selectedCenterX / size.width)).abs();
+      final waveAmplitude = waveHeight * (1 - distanceFromCenter * 0.5);
+      
+      final y = size.height * 0.15 +
+          waveAmplitude *
+              math.sin((normalizedX * waveFrequency * math.pi * 2) + waveSpeed);
+      if (x == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.lineTo(size.width, 0);
+    path.lineTo(0, 0);
+    path.close();
+
+    // Middle liquid wave
+    final middlePath = Path();
+    middlePath.moveTo(0, size.height * 0.5);
+    for (double x = 0; x <= size.width; x += 1) {
+      final normalizedX = x / size.width;
+      final distanceFromCenter = (normalizedX - (selectedCenterX / size.width)).abs();
+      final waveAmplitude = waveHeight * 0.6 * (1 - distanceFromCenter * 0.7);
+      
+      final y = size.height * 0.5 +
+          waveAmplitude *
+              math.sin((normalizedX * waveFrequency * math.pi * 2) + waveSpeed + math.pi / 3);
+      if (x == 0) {
+        middlePath.moveTo(x, y);
+      } else {
+        middlePath.lineTo(x, y);
+      }
+    }
+    middlePath.lineTo(size.width, size.height);
+    middlePath.lineTo(0, size.height);
+    middlePath.close();
+
+    // Bottom liquid wave
+    final bottomPath = Path();
+    bottomPath.moveTo(0, size.height * 0.85);
+    for (double x = 0; x <= size.width; x += 1) {
+      final normalizedX = x / size.width;
+      final distanceFromCenter = (normalizedX - (selectedCenterX / size.width)).abs();
+      final waveAmplitude = waveHeight * 0.8 * (1 - distanceFromCenter * 0.6);
+      
+      final y = size.height * 0.85 +
+          waveAmplitude *
+              math.sin((normalizedX * waveFrequency * math.pi * 2) + waveSpeed + math.pi);
+      if (x == 0) {
+        bottomPath.moveTo(x, y);
+      } else {
+        bottomPath.lineTo(x, y);
+      }
+    }
+    bottomPath.lineTo(size.width, size.height);
+    bottomPath.lineTo(0, size.height);
+    bottomPath.close();
+
+    canvas.drawPath(path, paint);
+    canvas.drawPath(middlePath, paint);
+    canvas.drawPath(bottomPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(_FullNavbarLiquidPainter oldDelegate) {
+    return oldDelegate.animation.value != animation.value ||
+        oldDelegate.currentIndex != currentIndex;
   }
 }

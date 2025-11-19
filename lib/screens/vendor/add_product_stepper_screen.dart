@@ -7,6 +7,7 @@ import '../../models/user.dart';
 import '../../providers/data_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/categories.dart';
+import '../../services/notification_service.dart';
 import '../product_detail_screen.dart';
 import 'add_product_step1_screen.dart';
 import 'add_product_step2_screen.dart';
@@ -644,15 +645,7 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
         }
 
         // Show success message
-        Get.snackbar(
-          'Success',
-          '${product.name} updated successfully!',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(16),
-        );
+        NotificationService.showProductUpdated(product.name);
 
         // Navigate to products screen using GetX route
         await Get.offNamed('/vendor/products');
@@ -678,15 +671,7 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
         }
 
         // Show success message
-        Get.snackbar(
-          'Success',
-          '${product.name} added successfully!',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(16),
-        );
+        NotificationService.showProductAdded(product.name);
 
         // Navigate to products screen using GetX route
         await Get.offNamed('/vendor/products');
@@ -698,14 +683,8 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
           _isLoading = false;
         });
       }
-      Get.snackbar(
-        'Error',
-        'Error ${_isEditMode ? "updating" : "adding"} product: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
+      NotificationService.showError(
+        message: 'Error ${_isEditMode ? "updating" : "adding"} product: $e',
       );
     }
   }

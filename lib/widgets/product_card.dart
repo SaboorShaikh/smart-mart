@@ -7,6 +7,7 @@ import 'custom_card.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import '../providers/data_provider.dart';
+import '../services/notification_service.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -366,25 +367,23 @@ class ProductCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       try {
                         provider.addToCart(product, qty);
+                        final productName = qty > 1 ? '${product.name} x$qty' : product.name;
+                        debugPrint('ProductCard: Adding to cart - $productName');
                         Get.back();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text('${product.name} x$qty added to cart'),
-                          ),
-                        );
+                        // Wait for bottom sheet animation to complete
+                        await Future.delayed(const Duration(milliseconds: 300));
+                        debugPrint('ProductCard: Showing notification for - $productName');
+                        NotificationService.showAddedToCart(productName);
                       } catch (e) {
                         debugPrint(
                             'Error adding to cart from quantity sheet: $e');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text('Error adding to cart. Please try again.'),
-                            backgroundColor: Colors.red,
-                          ),
+                        Get.back();
+                        await Future.delayed(const Duration(milliseconds: 300));
+                        NotificationService.showError(
+                          message: 'Error adding to cart. Please try again.',
                         );
                       }
                     },

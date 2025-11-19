@@ -334,7 +334,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
                                   title: notification.title,
                                   subtitle: notification.message,
                                   time: _formatTime(notification.createdAt),
-                                  icon: Icons.security,
+                                  iconAsset: AppIcons.notification,
                                 )),
                       // Show product activity notifications
                       if (productNotifications.isNotEmpty)
@@ -344,7 +344,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
                               title: notification.title,
                               subtitle: notification.message,
                               time: _formatTime(notification.createdAt),
-                              icon: _getProductActivityIcon(
+                              iconAsset: _getProductActivityIcon(
                                   notification.type.toString().split('.').last),
                             )),
                       if (vendorOrders.isNotEmpty)
@@ -357,7 +357,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
                                   subtitle:
                                       '${order.items.length} items - ₨${order.total.toStringAsFixed(0)}',
                                   time: _formatTime(order.createdAt),
-                                  icon: Icons.shopping_cart,
+                                  iconAsset: AppIcons.orders,
                                 )),
                       if (vendorPOSTransactions.isNotEmpty)
                         ...vendorPOSTransactions
@@ -368,7 +368,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
                                   subtitle:
                                       '${transaction.items.length} items - ₨${transaction.total.toStringAsFixed(0)}',
                                   time: _formatTime(transaction.createdAt),
-                                  icon: Icons.point_of_sale,
+                                  iconAsset: AppIcons.pointOfSale,
                                 )),
                     ],
                   ),
@@ -576,7 +576,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
     required String title,
     required String subtitle,
     required String time,
-    required IconData icon,
+    required String iconAsset, // Changed from IconData to String for asset path
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -590,17 +590,11 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: theme.colorScheme.primary,
-            ),
+          // Icon without background, larger size, using original colors
+          CustomIcon(
+            assetPath: iconAsset,
+            size: 28, // Increased from 16 to 28
+            color: null, // Use original icon colors
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -648,16 +642,16 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
     }
   }
 
-  IconData _getProductActivityIcon(String notificationType) {
+  String _getProductActivityIcon(String notificationType) {
     switch (notificationType) {
       case 'product_added':
-        return Icons.add_circle;
+        return AppIcons.add;
       case 'product_deleted':
-        return Icons.delete;
+        return AppIcons.delete;
       case 'product_discount':
-        return Icons.local_offer;
+        return AppIcons.promo;
       default:
-        return Icons.inventory;
+        return AppIcons.products;
     }
   }
 
@@ -1027,7 +1021,7 @@ class _VendorDashboardContentState extends State<VendorDashboardContent>
                     createdAt: n.createdAt,
                     title: n.title,
                     subtitle: n.message,
-                    icon: Icons.security,
+                    iconAsset: AppIcons.notification,
                   ),
                 );
               }
@@ -1038,7 +1032,7 @@ class _VendorDashboardContentState extends State<VendorDashboardContent>
                     createdAt: n.createdAt,
                     title: n.title,
                     subtitle: n.message,
-                    icon: _getVendorProductActivityIcon(
+                    iconAsset: _getVendorProductActivityIcon(
                         n.type.toString().split('.').last),
                   ),
                 );
@@ -1051,7 +1045,7 @@ class _VendorDashboardContentState extends State<VendorDashboardContent>
                     title: 'New Order #${order.id.substring(0, 8)}',
                     subtitle:
                         '${order.items.length} items - ₨${order.total.toStringAsFixed(0)}',
-                    icon: Icons.shopping_cart,
+                    iconAsset: AppIcons.orders,
                   ),
                 );
               }
@@ -1063,7 +1057,7 @@ class _VendorDashboardContentState extends State<VendorDashboardContent>
                     title: 'POS Transaction',
                     subtitle:
                         '${t.items.length} items - ₨${t.total.toStringAsFixed(0)}',
-                    icon: Icons.point_of_sale,
+                    iconAsset: AppIcons.pointOfSale,
                   ),
                 );
               }
@@ -1080,7 +1074,7 @@ class _VendorDashboardContentState extends State<VendorDashboardContent>
                           title: a.title,
                           subtitle: a.subtitle,
                           time: _formatVendorTime(a.createdAt),
-                          icon: a.icon,
+                          iconAsset: a.iconAsset,
                         ))
                     .toList(),
               );
@@ -1329,14 +1323,14 @@ class _VendorActivityItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final String time;
-  final IconData icon;
+  final String iconAsset; // Changed from IconData to String for asset path
 
   const _VendorActivityItem({
     required this.theme,
     required this.title,
     required this.subtitle,
     required this.time,
-    required this.icon,
+    required this.iconAsset,
   });
 
   @override
@@ -1353,17 +1347,11 @@ class _VendorActivityItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: theme.colorScheme.primary,
-            ),
+          // Icon without background, larger size, using original colors
+          CustomIcon(
+            assetPath: iconAsset,
+            size: 28, // Increased from 16 to 28
+            color: null, // Use original icon colors
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1412,16 +1400,16 @@ String _formatVendorTime(DateTime dateTime) {
   }
 }
 
-IconData _getVendorProductActivityIcon(String notificationType) {
+String _getVendorProductActivityIcon(String notificationType) {
   switch (notificationType) {
     case 'product_added':
-      return Icons.add_circle;
+      return AppIcons.add;
     case 'product_deleted':
-      return Icons.delete;
+      return AppIcons.delete;
     case 'product_discount':
-      return Icons.local_offer;
+      return AppIcons.promo;
     default:
-      return Icons.inventory;
+      return AppIcons.products;
   }
 }
 
@@ -1429,13 +1417,13 @@ class _VendorActivity {
   final DateTime createdAt;
   final String title;
   final String subtitle;
-  final IconData icon;
+  final String iconAsset; // Changed from IconData to String for asset path
 
   _VendorActivity({
     required this.createdAt,
     required this.title,
     required this.subtitle,
-    required this.icon,
+    required this.iconAsset,
   });
 }
 
@@ -1486,7 +1474,7 @@ class _VendorNotificationsPopup extends StatelessWidget {
         width: width,
         constraints: const BoxConstraints(maxHeight: 480, minHeight: 260),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFFF4F5F7), // Light gray background
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -1596,7 +1584,7 @@ class _VendorNotificationsPopup extends StatelessWidget {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
+                            color: Colors.white, // White background for notification tiles
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: InkWell(
