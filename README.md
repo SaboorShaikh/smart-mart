@@ -17,6 +17,9 @@
 - 🔎 **Collapsing Search**: Scroll-driven search bar that morphs into header icon
 - 📊 **Rich Analytics**: Comprehensive sales tracking and insights
 - 🌐 **Cloud-First**: Firebase & Supabase for scalable backend
+- ✨ **Shimmer Loading**: YouTube-style skeleton loading effects for smooth UX
+- 🌊 **Liquid Navbar**: Frosted glass navigation with animated liquid effects
+- 🔔 **Frosted Notifications**: Beautiful top-sliding notification banners with glassmorphism
 
 ## 🚀 Features
 
@@ -35,6 +38,8 @@
 - **🔔 Smart Notifications**: Get notified about orders, updates, and activities
 - **📸 Image Carousel**: Swipe through multiple product images with progress indicators
 - **💾 Cart Persistence**: Your cart is saved even when you close the app
+- **✨ Shimmer Loading**: Beautiful skeleton loading effects while content loads
+- **🔔 Frosted Notifications**: Elegant top-sliding notification banners with frosted glass effect
 
 ### 🏪 Vendor Features
 - **📊 Real-time Dashboard**: View comprehensive sales analytics and business metrics
@@ -68,6 +73,7 @@
 - **⚙️ Store Settings**: Manage store details, business information, and policies
 - **📱 Real-time Inventory**: Monitor stock levels with automatic updates
 - **✏️ In-line Editing**: Quick edit access via long-press on products
+- **🔔 Frosted Notifications**: Beautiful notification banners for product actions (add, update, delete)
 
 ### 🔧 Common Features
 - **🔐 Secure Authentication**: Firebase Auth with email/password and Microsoft OAuth
@@ -78,11 +84,14 @@
 - **📍 GPS Integration**: Location detection and address geocoding
 - **🎨 Modern UI**: Material 3 design with custom animated components
 - **🪄 Smooth Animations**: Implicit transforms/opacity for scroll-based morph effects
-- **🧭 Floating Navigation Bar**: iOS-style navigation with smooth animations
+- **🧭 Floating Navigation Bar**: iOS-style navigation with smooth animations and liquid effects
 - **📱 Cross-Platform**: Native performance on Android and iOS
 - **💾 Smart Caching**: Optimized data loading with local storage fallback
 - **🔄 Pull-to-Refresh**: Manual data refresh on all list screens
 - **🎯 Haptic Feedback**: Touch feedback for better user experience
+- **✨ Shimmer Effects**: Skeleton loading animations for better perceived performance
+- **🌊 Liquid Animations**: Smooth liquid wave effects on navbar capsule and background
+- **🔔 Frosted Glass UI**: Glassmorphism design with backdrop blur effects
 
 ## 🛠️ Technology Stack
 
@@ -200,15 +209,19 @@ lib/
 │   ├── custom_card.dart               # Card component
 │   ├── custom_icon.dart               # Icon wrapper for assets
 │   ├── product_card.dart              # Product display card
-│   ├── floating_nav_bar.dart          # iOS-style animated navigation
+│   ├── floating_nav_bar.dart          # iOS-style animated navigation with liquid effects
 │   ├── discount_dialog.dart           # Discount management dialog
-│   └── sales_chart.dart               # Analytics visualization
+│   ├── sales_chart.dart               # Analytics visualization
+│   ├── shimmer.dart                   # Shimmer loading animation widget
+│   ├── skeleton_loaders.dart          # Skeleton loading components
+│   └── frosted_notification_banner.dart # Frosted glass notification banner
 │
 ├── services/                           # External integrations
 │   ├── firestore_service.dart         # Firestore CRUD operations
 │   ├── microsoft_oauth.dart           # Microsoft authentication
 │   ├── onedrive_storage_service.dart  # OneDrive integration
-│   └── supabase_storage_service.dart  # Supabase image storage
+│   ├── supabase_storage_service.dart  # Supabase image storage
+│   └── notification_service.dart     # Frosted notification banner service
 │
 ├── router/                             # Navigation
 │   └── app_router.dart                # GoRouter configuration (legacy)
@@ -640,7 +653,25 @@ For support and questions:
 
 ## 🔄 Recent Updates
 
-### v1.3.2 - Blue Theme Refresh (Latest)
+### v1.4.0 - UI Enhancements & Frosted Glass Design (Latest)
+- ✅ **Shimmer Loading Effects**: YouTube-style skeleton loading on home and browse screens
+- ✅ **Frosted Glass Navbar**: Beautiful glassmorphism navigation with backdrop blur
+- ✅ **Liquid Animations**: 
+  - Liquid wave effects on navbar capsule borders
+  - Morphing animations during tab transitions
+  - Background liquid waves that flow across navbar
+- ✅ **Frosted Notification Banners**: 
+  - Top-sliding notification banners with frosted glass effect
+  - Auto-dismiss after 3 seconds
+  - Smooth slide-in/slide-out animations
+  - Replaces all snackbars with elegant banners
+- ✅ **Enhanced UI Polish**: 
+  - Light gray backgrounds for notification screens
+  - White notification tiles with borders and elevation
+  - Improved icon sizing and styling
+  - Better visual hierarchy throughout the app
+
+### v1.3.2 - Blue Theme Refresh
 - ✅ **Global Theme Sync**: Vendor product screen's blue palette now powers buttons, links, and highlights across the app
 - ✅ **Consistent Accent Color**: Primary/secondary colors standardized for both customer and vendor flows
 
@@ -796,11 +827,43 @@ We welcome contributions to SmartMart! Here's how you can help:
 - **Review Before Save**: Full product preview with Update button
 
 ### Floating Navigation Bar
-- **iOS-style Design**: Animated capsule indicator
+- **iOS-style Design**: Animated capsule indicator with liquid effects
+- **Frosted Glass Background**: Backdrop blur with theme-aware transparency
+- **Liquid Animations**: 
+  - Wave effects on capsule borders that morph during transitions
+  - Liquid background waves that flow across the navbar
+  - Smooth morphing animations with elastic bounce
 - **Weighted Layout**: Selected item gets more space
 - **Drag Support**: Long-press and drag to switch tabs
-- **Smooth Animations**: 280ms easeOutCubic transitions
-- **Icon + Label**: Selected item shows icon and text
+- **Smooth Animations**: 400-600ms easeOutCubic transitions
+- **Icon + Label**: Selected item shows icon and text with fade animations
+- **Theme-Aware**: Adapts to light/dark mode automatically
+
+### Shimmer Loading Effects
+- **Skeleton Loaders**: YouTube-style loading placeholders
+- **Smooth Animations**: Gradient shimmer effect that sweeps across placeholders
+- **Multiple Components**:
+  - Product card skeletons
+  - Mart card skeletons
+  - Search bar skeletons
+  - Section header skeletons
+  - Promo carousel skeletons
+- **Smart Loading**: Automatically hides when data is loaded
+- **Performance Optimized**: Lightweight animations with minimal CPU usage
+
+### Frosted Notification Banners
+- **Glassmorphism Design**: Frosted glass effect with backdrop blur
+- **Top Slide Animation**: Slides in from top with smooth fade
+- **Auto-Dismiss**: Automatically disappears after 3 seconds
+- **Manual Close**: X button for immediate dismissal
+- **Theme-Aware**: Adapts colors for light/dark mode
+- **Multiple Types**:
+  - Success notifications (green)
+  - Error notifications (red)
+  - Info notifications (blue)
+  - Product actions (add, update, delete)
+  - Cart notifications
+- **Smooth Transitions**: 400ms slide-in, 300ms slide-out animations
 
 ## 📄 License
 
