@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
+import 'dart:ui';
 import '../providers/data_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/discount_dialog.dart';
+import '../widgets/skeleton_loaders.dart';
 import '../models/product.dart';
 import '../models/user.dart';
 import '../services/firestore_service.dart';
 import '../services/notification_service.dart';
+import 'vendor/add_product_stepper_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String? productId;
@@ -31,7 +36,8 @@ class ProductDetailScreen extends StatefulWidget {
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
+class _ProductDetailScreenState extends State<ProductDetailScreen>
+    with TickerProviderStateMixin {
   int _quantity = 1;
   Product? _product;
   User? _vendor;
@@ -41,11 +47,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _currentImageIndex = 0;
   bool _isDescriptionExpanded = false;
   double? _userRating;
+  AnimationController? _blurController;
+  Animation<double>? _blurAnimation;
 
   @override
   void initState() {
     super.initState();
     _imagePageController = PageController(viewportFraction: 0.85);
+    
+    // Initialize blur animation controller
+    _blurController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _blurAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _blurController!, curve: Curves.easeInOut),
+    );
+    
     if (widget.isReviewMode && widget.product != null) {
       // In review mode, use provided product directly
       _product = widget.product;
@@ -225,6 +243,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void dispose() {
     _imagePageController.dispose();
+    _blurController?.dispose();
     super.dispose();
   }
 
@@ -301,22 +320,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     // Show loading state
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: const Color(0xFFF4F5F7),
         appBar: AppBar(
           title: const Text('Product Details'),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Loading product details...'),
-            ],
-          ),
-        ),
+        body: const ProductDetailSkeleton(),
       );
     }
 
@@ -392,10 +402,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             : _handleUnauthenticatedRatingTap)
         : null;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F7),
-      extendBodyBehindAppBar: false,
-      appBar: AppBar(
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: const Color(0xFFF4F5F7),
+          extendBodyBehindAppBar: false,
+          appBar: AppBar(
         title: Text(widget.isReviewMode ? 'Review Product' : 'Product Details'),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -403,7 +415,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         leading: Padding(
           padding: const EdgeInsets.only(left: 8, top: 6, bottom: 6),
           child: IconButton(
-            onPressed: () => Navigator.of(context).maybePop(),
+            onPressed: () => _handleBack(context),
             icon: Icon(
               LucideIcons.arrowLeft,
               color: theme.colorScheme.onSurface,
@@ -484,27 +496,139 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   }
                 },
               )
-            : Row(
-                children: [
-                  Expanded(
-                    child: CustomButton(
-                      text: 'Add to Cart',
-                      onPressed: () => _addToCart(product),
-                      isOutlined: true,
-                      backgroundColor: theme.colorScheme.primary,
-                    ),
+            : _isVendorViewingOwnProduct(product, authProvider)
+                ? Row(
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                          text: 'Add Discount',
+                          onPressed: () => _showDiscountDialog(product),
+                          isOutlined: true,
+                          backgroundColor: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: CustomButton(
+                          text: 'Edit Product',
+                          onPressed: () => _editProduct(product),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                          text: 'Add to Cart',
+                          onPressed: () => _addToCart(product),
+                          isOutlined: true,
+                          backgroundColor: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: CustomButton(
+                          text: 'Buy Now',
+                          onPressed: () => _buyNow(product),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CustomButton(
-                      text: 'Buy Now',
-                      onPressed: () => _buyNow(product),
-                    ),
-                  ),
-                ],
+          ),
+        ),
+        // Blur overlay that animates when navigating to edit product
+        if (_blurAnimation != null)
+          AnimatedBuilder(
+            animation: _blurAnimation!,
+            builder: (context, child) {
+              if (_blurAnimation!.value == 0) {
+                return const SizedBox.shrink();
+              }
+              return BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: _blurAnimation!.value * 10,
+                  sigmaY: _blurAnimation!.value * 10,
+                ),
+                child: Container(
+                  color: Colors.white.withOpacity(_blurAnimation!.value * 0.3),
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  void _handleBack(BuildContext context) {
+    // Use Get.back() to ensure custom transition works properly
+    Get.back();
+  }
+
+  bool _isVendorViewingOwnProduct(Product product, AuthProvider authProvider) {
+    if (!authProvider.isAuthenticated) return false;
+    if (authProvider.user?.role != UserRole.vendor) return false;
+    return product.vendorId == authProvider.user?.id;
+  }
+
+  void _showDiscountDialog(Product product) {
+    showDialog(
+      context: context,
+      builder: (context) => DiscountDialog(
+        product: product,
+        onDiscountApplied: (updatedProduct) async {
+          try {
+            final dataProvider =
+                Provider.of<DataProvider>(context, listen: false);
+            await dataProvider.updateProduct(product.id, updatedProduct);
+
+            // Reload the product to reflect the changes
+            await _loadProduct();
+
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  updatedProduct.isDiscounted
+                      ? 'Discount applied successfully!'
+                      : 'Discount removed successfully!',
+                ),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
+            );
+          } catch (e) {
+            debugPrint('Error updating discount: $e');
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to update discount: $e'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        },
       ),
     );
+  }
+
+  void _editProduct(Product product) async {
+    debugPrint('Editing product: ${product.name}');
+    
+    // Start blur animation
+    _blurController?.forward();
+    
+    // Wait a tiny bit for blur to start
+    await Future.delayed(const Duration(milliseconds: 50));
+    
+    // Navigate to edit product screen
+    await Get.to(
+      () => AddProductStepperScreen(product: product),
+      transition: Transition.rightToLeft,
+      duration: const Duration(milliseconds: 300),
+    );
+    
+    // Reverse blur animation when coming back
+    _blurController?.reverse();
   }
 
   void _addToCart(Product product) {

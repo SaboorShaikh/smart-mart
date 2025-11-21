@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../providers/auth_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:ui';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,80 +15,92 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  late AnimationController _animationController;
+  late AnimationController _fadeController;
+  late AnimationController _panelController;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<Offset> _slideAnimation;
-  late AnimationController _bgController;
-  late Animation<double> _bgShift;
+  late Animation<double> _panelHeightAnimation;
   bool _locationRationaleHandled = false;
+  bool _loadingComplete = false;
+
+  // Color constants
+  static const Color primaryBlue = Color(0xFF2563EB);
+  static const Color subtitleGray = Color(0xFF4A4A4A);
+  static const Color panelGray = Color(0xFFF2F2F2);
+  static const Color blurOverlay = Color(0x4DFFFFFF); // White with 30% opacity
+  static const Color white = Color(0xFFFFFFFF);
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
+    
+    // Fade animation for top content
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
+      parent: _fadeController,
+      curve: Curves.easeOut,
     ));
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
-    );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-            CurvedAnimation(
-                parent: _animationController, curve: Curves.easeOutCubic));
-
-    // Subtle animated background shift
-    _bgController = AnimationController(
-      duration: const Duration(seconds: 4),
+    // Panel slide-up animation
+    _panelController = AnimationController(
+      duration: const Duration(milliseconds: 600),
       vsync: this,
-    )..repeat(reverse: true);
-    _bgShift = Tween<double>(begin: -0.2, end: 0.2).animate(
-      CurvedAnimation(parent: _bgController, curve: Curves.easeInOutSine),
     );
+    _panelHeightAnimation = Tween<double>(
+      begin: 0.4, // 40% of screen
+      end: 1.0, // Full screen
+    ).animate(CurvedAnimation(
+      parent: _panelController,
+      curve: Curves.easeInOutCubic,
+    ));
 
+    _fadeController.forward();
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // Start animation
-    _animationController.forward();
-
     // First-launch location rationale + permission
     await _ensureLocationPermissionWithRationale();
 
     // Load current user
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    // Load current user without emitting during build
     await authProvider.loadCurrentUser(emit: false);
 
-    // Wait for animation to complete
-    await Future.delayed(const Duration(seconds: 2));
+    // Mark loading as complete
+    if (mounted) {
+      setState(() {
+        _loadingComplete = true;
+      });
 
-    // Ensure at least one frame has fully completed and Navigator has size
-    try {
-      await WidgetsBinding.instance.endOfFrame;
-    } catch (_) {}
+      // Start panel expansion animation
+      await _panelController.forward();
 
-    if (!mounted) return;
-    // Navigate based on authentication status (no setState involved)
-    if (authProvider.isAuthenticated) {
-      final user = authProvider.user!;
-      if (user.role.toString().split('.').last == 'vendor') {
-        Get.offAllNamed('/vendor');
+      // Small delay before navigation
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // Ensure at least one frame has fully completed
+      try {
+        await WidgetsBinding.instance.endOfFrame;
+      } catch (_) {}
+
+      if (!mounted) return;
+
+      // Navigate based on authentication status
+      if (authProvider.isAuthenticated) {
+        final user = authProvider.user!;
+        if (user.role.toString().split('.').last == 'vendor') {
+          Get.offAllNamed('/vendor');
+        } else {
+          Get.offAllNamed('/customer');
+        }
       } else {
-        Get.offAllNamed('/customer');
+        Get.offAllNamed('/onboarding');
       }
-    } else {
-      Get.offAllNamed('/onboarding');
     }
   }
 
@@ -95,8 +108,6 @@ class _SplashScreenState extends State<SplashScreen>
     final prefs = await SharedPreferences.getInstance();
     final shown = prefs.getBool('smartmart_location_rationale_shown') ?? false;
 
-    // To prevent startup crashes on some devices, skip showing a dialog here.
-    // Just request permission silently and record that the rationale was shown.
     if (!shown && mounted && !_locationRationaleHandled) {
       _locationRationaleHandled = true;
       await prefs.setBool('smartmart_location_rationale_shown', true);
@@ -110,143 +121,218 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _bgController.dispose();
+    _fadeController.dispose();
+    _panelController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _bgController,
-        builder: (context, _) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment(-1 + _bgShift.value, -1),
-                end: Alignment(1 + _bgShift.value, 1),
-                colors: [
-                  theme.colorScheme.primary.withOpacity(0.95),
-                  theme.colorScheme.primary.withOpacity(0.75),
-                  theme.colorScheme.secondary.withOpacity(0.65),
-                ],
-              ),
-            ),
-            child: Center(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: white,
+      body: Stack(
+        children: [
+          // Top Section (60% of screen initially) - Branding
+          AnimatedBuilder(
+            animation: _panelHeightAnimation,
+            builder: (context, child) {
+              // Panel starts at 40% (0.4) → top is 60% (0.6)
+              // Panel ends at 100% (1.0) → top is 0% (0.0)
+              final screenHeight = MediaQuery.of(context).size.height;
+              final topHeight = screenHeight * (1.0 - _panelHeightAnimation.value);
+              
+              return Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: topHeight,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    color: white,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Shopping Bag Icon
+                          Icon(
+                            Icons.shopping_bag,
+                            size: 80,
+                            color: primaryBlue,
+                          ),
+                          const SizedBox(height: 16),
+                          // App Name
+                          Text(
+                            'SmartMart',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: primaryBlue,
+                              letterSpacing: -0.5,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Subtitle
+                          Text(
+                            'Local Marketplace. Smarter Shopping.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                              color: subtitleGray,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Bottom Sliding Panel (40% of screen)
+          AnimatedBuilder(
+            animation: _panelHeightAnimation,
+            builder: (context, child) {
+              final panelHeight = MediaQuery.of(context).size.height * 
+                  _panelHeightAnimation.value;
+
+              return Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: panelHeight,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: panelGray,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(_panelHeightAnimation.value < 0.99 ? 24 : 0),
+                      topRight: Radius.circular(_panelHeightAnimation.value < 0.99 ? 24 : 0),
+                    ),
+                  ),
+                  child: Stack(
                     children: [
-                      // Animated logo tile
-                      ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 24,
-                                offset: const Offset(0, 12),
+                      // Frosted blur overlay
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(_panelHeightAnimation.value < 0.99 ? 24 : 0),
+                            topRight: Radius.circular(_panelHeightAnimation.value < 0.99 ? 24 : 0),
+                          ),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              color: blurOverlay,
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      // Thin top border
+                      if (_panelHeightAnimation.value < 0.99)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 1,
+                            color: blurOverlay,
+                          ),
+                        ),
+
+                      // Bottom sheet handle
+                      if (_panelHeightAnimation.value < 0.99 && !_loadingComplete)
+                        Positioned(
+                          top: 10,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFCBD5E1),
+                                borderRadius: BorderRadius.circular(2),
                               ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.shopping_bag_rounded,
-                            size: 64,
-                            color: theme.colorScheme.primary,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 28),
-                      // App name with subtle shimmer
-                      _ShimmerText(
-                        text: 'Smart Mart',
-                        style: theme.textTheme.displayMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
+
+                      // Shimmer effect on panel (loading preview)
+                      if (!_loadingComplete)
+                        Positioned.fill(
+                          child: _ShimmerPanel(),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Your Smart Marketplace',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: Colors.white.withOpacity(0.85),
-                        ),
-                      ),
-                      const SizedBox(height: 42),
-                      // Thin progress line
-                      SizedBox(
-                        width: 140,
-                        child: LinearProgressIndicator(
-                          minHeight: 3,
-                          backgroundColor: Colors.white.withOpacity(0.25),
-                          color: Colors.white,
-                        ),
-                      ),
                     ],
                   ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ShimmerText extends StatefulWidget {
-  final String text;
-  final TextStyle? style;
-  const _ShimmerText({required this.text, this.style});
-
+// Shimmer effect for the bottom panel
+class _ShimmerPanel extends StatefulWidget {
   @override
-  State<_ShimmerText> createState() => _ShimmerTextState();
+  State<_ShimmerPanel> createState() => _ShimmerPanelState();
 }
 
-class _ShimmerTextState extends State<_ShimmerText>
+class _ShimmerPanelState extends State<_ShimmerPanel>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: const Duration(seconds: 2))
-        ..repeat();
+  late AnimationController _shimmerController;
+  late Animation<double> _shimmerAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+    
+    _shimmerAnimation = Tween<double>(
+      begin: -1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(
+      parent: _shimmerController,
+      curve: Curves.linear,
+    ));
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: _shimmerAnimation,
       builder: (context, child) {
         return ShaderMask(
           shaderCallback: (rect) {
             return LinearGradient(
-              begin: Alignment(-1 + _controller.value * 2, 0),
-              end: Alignment(1 + _controller.value * 2, 0),
+              begin: Alignment(_shimmerAnimation.value - 1, 0),
+              end: Alignment(_shimmerAnimation.value, 0),
               colors: [
-                Colors.white.withOpacity(0.2),
-                Colors.white,
-                Colors.white.withOpacity(0.2),
+                Colors.white.withOpacity(0.0),
+                Colors.white.withOpacity(0.3),
+                Colors.white.withOpacity(0.0),
               ],
-              stops: const [0.35, 0.5, 0.65],
+              stops: const [0.0, 0.5, 1.0],
             ).createShader(rect);
           },
           blendMode: BlendMode.srcATop,
-          child: Text(widget.text, style: widget.style),
+          child: Container(
+            color: Colors.white.withOpacity(0.1),
+          ),
         );
       },
     );

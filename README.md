@@ -17,7 +17,9 @@
 - 🔎 **Collapsing Search**: Scroll-driven search bar that morphs into header icon
 - 📊 **Rich Analytics**: Comprehensive sales tracking and insights
 - 🌐 **Cloud-First**: Firebase & Supabase for scalable backend
-- ✨ **Shimmer Loading**: YouTube-style skeleton loading effects for smooth UX
+- ✨ **Shimmer Loading**: YouTube-style skeleton loading effects with right-to-left diagonal gradient
+- 🎬 **Smooth Animations**: Custom page transitions with blur effects and slide animations
+- 💼 **Vendor Product Management**: Context-aware buttons on product detail screen
 - 🌊 **Liquid Navbar**: Frosted glass navigation with animated liquid effects
 - 🔔 **Frosted Notifications**: Beautiful top-sliding notification banners with glassmorphism
 
@@ -25,6 +27,10 @@
 
 ### 👥 Customer Features
 - **🛍️ Browse Products**: Discover products from local vendors with rich product details and image carousels
+- **📱 Product Detail Screen**: 
+  - Beautiful shimmer loading effect while loading
+  - Smooth slide-in/slide-out animations
+  - Vendor-specific actions when viewing own products
 - **🛒 Shopping Cart**: Add items to cart with quantity management and persistent storage
 - **📦 Order Management**: Track order history, status, and delivery updates in real-time
 - **👤 User Profile**: Manage personal information, preferences, and delivery addresses
@@ -49,9 +55,18 @@
   - Long-press menu for quick edit/delete access
   - Image gallery management with add/remove functionality
   - Review mode to preview products before saving
+  - Product detail screen with vendor-specific actions:
+    - Add Discount button for quick discount management
+    - Edit Product button for instant editing
+    - Blur effect animation when navigating to edit
+    - Smooth slide-out animation on back navigation
 - **💰 Discount Management**: 
-  - Apply percentage or fixed price discounts
-  - Set discount start/end dates
+  - Modern discount dialog with product preview
+  - Apply percentage or fixed amount discounts
+  - Fixed amount discounts subtract from original price
+  - Set discount start/end dates with calendar picker
+  - Real-time price preview showing new price and savings
+  - Sliding background animation for discount type selection
   - Real-time discount badge display
   - Automatic notifications for discount changes
 - **📋 Order Processing**: Handle incoming orders with real-time updates
@@ -210,9 +225,9 @@ lib/
 │   ├── custom_icon.dart               # Icon wrapper for assets
 │   ├── product_card.dart              # Product display card
 │   ├── floating_nav_bar.dart          # iOS-style animated navigation with liquid effects
-│   ├── discount_dialog.dart           # Discount management dialog
+│   ├── discount_dialog.dart           # Modern discount dialog with sliding animations
 │   ├── sales_chart.dart               # Analytics visualization
-│   ├── shimmer.dart                   # Shimmer loading animation widget
+│   ├── shimmer.dart                   # YouTube-style shimmer with right-to-left diagonal gradient
 │   ├── skeleton_loaders.dart          # Skeleton loading components
 │   └── frosted_notification_banner.dart # Frosted glass notification banner
 │
@@ -653,7 +668,33 @@ For support and questions:
 
 ## 🔄 Recent Updates
 
-### v1.4.0 - UI Enhancements & Frosted Glass Design (Latest)
+### v1.5.0 - Product Detail Enhancements & Advanced Animations (Latest)
+- ✅ **Vendor-Specific Product Detail**: 
+  - Add Discount and Edit Product buttons for vendors viewing their own products
+  - Buy Now and Add to Cart buttons for customers
+  - Automatic role detection and button switching
+- ✅ **Blur Effect Animation**: 
+  - Product detail screen blurs smoothly (0-100%) when navigating to edit product
+  - Blur reverses (100-0%) when returning from edit screen
+  - Synchronized with page transition animations
+- ✅ **Custom Back Animation**: 
+  - Slide-out-to-right animation when pressing back button
+  - Matches edit product screen transition style
+  - Smooth 300ms animation duration
+- ✅ **Enhanced Discount Dialog**: 
+  - Modern redesign with product card display
+  - Sliding background animation for discount type selection
+  - Right-to-left diagonal shimmer effect
+  - Real-time price preview with savings calculation
+  - Fixed bottom buttons with scrollable content
+  - Improved form validation and user experience
+- ✅ **YouTube-Style Shimmer Effects**: 
+  - Right-to-left diagonal gradient animation
+  - Applied to product detail screen and all loading states
+  - Smooth, subtle shimmer effect matching YouTube's design
+  - Performance optimized for lists and grids
+
+### v1.4.0 - UI Enhancements & Frosted Glass Design
 - ✅ **Shimmer Loading Effects**: YouTube-style skeleton loading on home and browse screens
 - ✅ **Frosted Glass Navbar**: Beautiful glassmorphism navigation with backdrop blur
 - ✅ **Liquid Animations**: 
@@ -818,10 +859,19 @@ We welcome contributions to SmartMart! Here's how you can help:
   - Upload up to 5 images per product
   - Existing images show "Saved" badge in edit mode
   - Remove/keep existing images, add new ones
+- **Product Detail Screen**:
+  - Vendor-specific buttons (Add Discount, Edit Product) for own products
+  - Customer buttons (Add to Cart, Buy Now) for other products
+  - Blur effect animation when navigating to edit (0-100%)
+  - Smooth slide-out-to-right animation on back button
+  - Shimmer loading effect while loading product data
 - **Discount System**:
+  - Modern discount dialog with product card preview
   - Percentage discounts (1-99%)
-  - Fixed price discounts
-  - Start/end date scheduling
+  - Fixed amount discounts (subtracts from original price)
+  - Sliding background animation for discount type selection
+  - Real-time price preview with savings calculation
+  - Start/end date scheduling with calendar picker
   - Visual discount badge on product cards
   - Automatic notification creation
 - **Review Before Save**: Full product preview with Update button
@@ -840,16 +890,19 @@ We welcome contributions to SmartMart! Here's how you can help:
 - **Theme-Aware**: Adapts to light/dark mode automatically
 
 ### Shimmer Loading Effects
-- **Skeleton Loaders**: YouTube-style loading placeholders
-- **Smooth Animations**: Gradient shimmer effect that sweeps across placeholders
+- **YouTube-Style Animation**: Right-to-left diagonal gradient shimmer effect
+- **Skeleton Loaders**: Beautiful loading placeholders matching YouTube's design
+- **Smooth Transitions**: 1500ms animation period with easeInOut curves
 - **Multiple Components**:
   - Product card skeletons
+  - Product detail screen skeleton
   - Mart card skeletons
   - Search bar skeletons
   - Section header skeletons
   - Promo carousel skeletons
 - **Smart Loading**: Automatically hides when data is loaded
 - **Performance Optimized**: Lightweight animations with minimal CPU usage
+- **Reusable Widget**: `YouTubeShimmer` widget with customizable parameters
 
 ### Frosted Notification Banners
 - **Glassmorphism Design**: Frosted glass effect with backdrop blur

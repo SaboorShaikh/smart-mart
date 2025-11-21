@@ -222,7 +222,9 @@ class SmartMartApp extends StatelessWidget {
               GetPage(
                   name: '/product/:id',
                   page: () =>
-                      ProductDetailScreen(productId: Get.parameters['id']!)),
+                      ProductDetailScreen(productId: Get.parameters['id']!),
+                  transition: Transition.rightToLeft,
+                  transitionDuration: const Duration(milliseconds: 300)),
             ],
           );
         },
