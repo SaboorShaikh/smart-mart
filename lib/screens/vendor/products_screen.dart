@@ -148,154 +148,160 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // Light grey background
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Custom Header
-            _buildHeader(context, theme),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                _buildHeader(context, theme),
 
-            // Filter Tabs
-            _buildFilterTabs(theme),
+                // Filter Tabs
+                _buildFilterTabs(theme),
 
-            // Products Grid
-            Expanded(
-              child: authProvider.user == null
-                  ? const SizedBox.shrink()
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        debugPrint('ProductsScreen: Manual refresh triggered');
-                        final dataProvider =
-                            Provider.of<DataProvider>(context, listen: false);
-                        final authProvider =
-                            Provider.of<AuthProvider>(context, listen: false);
-                        if (authProvider.user != null) {
-                          await dataProvider.forceRefreshVendorProducts(
-                              authProvider.user!.id);
-                          debugPrint(
-                              'ProductsScreen: Manual refresh completed');
-                        }
-                      },
-                      child: Consumer<DataProvider>(
-                        builder: (context, dataProvider, child) {
-                          final allProducts = dataProvider.products;
-                          final filteredProducts = _filterProducts(allProducts);
+                // Products Grid
+                Expanded(
+                  child: authProvider.user == null
+                      ? const SizedBox.shrink()
+                      : RefreshIndicator(
+                          onRefresh: () async {
+                            debugPrint('ProductsScreen: Manual refresh triggered');
+                            final dataProvider =
+                                Provider.of<DataProvider>(context, listen: false);
+                            final authProvider =
+                                Provider.of<AuthProvider>(context, listen: false);
+                            if (authProvider.user != null) {
+                              await dataProvider.forceRefreshVendorProducts(
+                                  authProvider.user!.id);
+                              debugPrint(
+                                  'ProductsScreen: Manual refresh completed');
+                            }
+                          },
+                          child: Consumer<DataProvider>(
+                            builder: (context, dataProvider, child) {
+                              final allProducts = dataProvider.products;
+                              final filteredProducts = _filterProducts(allProducts);
 
-                          debugPrint(
-                              'ProductsScreen: Consumer rebuilding - Products count: ${allProducts.length}, Filtered: ${filteredProducts.length}');
+                              debugPrint(
+                                  'ProductsScreen: Consumer rebuilding - Products count: ${allProducts.length}, Filtered: ${filteredProducts.length}');
 
-                          if (allProducts.isEmpty && !_hasTimedOut) {
-                            return const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircularProgressIndicator(),
-                                  SizedBox(height: 16),
-                                  Text('Loading products...'),
-                                ],
-                              ),
-                            );
-                          }
-
-                          if (allProducts.isEmpty && _hasTimedOut) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CustomIcon(
-                                    assetPath: AppIcons.products,
-                                    size: 80,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                              if (allProducts.isEmpty && !_hasTimedOut) {
+                                return const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 16),
+                                      Text('Loading products...'),
+                                    ],
                                   ),
-                                  const SizedBox(height: 24),
-                                  Text(
-                                    'No products found',
-                                    style:
-                                        theme.textTheme.headlineSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Start by adding your first product',
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 32),
-                                  CustomButton(
-                                    text: 'Add Product',
-                                    onPressed: () {
-                                      Get.toNamed(
-                                          '/vendor/add-product-stepper');
-                                    },
-                                    icon: const Icon(LucideIcons.plus),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
+                                );
+                              }
 
-                          if (filteredProducts.isEmpty) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    LucideIcons.search,
-                                    size: 64,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                              if (allProducts.isEmpty && _hasTimedOut) {
+                                return Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CustomIcon(
+                                        assetPath: AppIcons.products,
+                                        size: 80,
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Text(
+                                        'No products found',
+                                        style:
+                                            theme.textTheme.headlineSmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Start by adding your first product',
+                                        style: theme.textTheme.bodyLarge?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 32),
+                                      CustomButton(
+                                        text: 'Add Product',
+                                        onPressed: () {
+                                          Get.toNamed(
+                                              '/vendor/add-product-stepper');
+                                        },
+                                        icon: const Icon(LucideIcons.plus),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No products match your filters',
-                                    style:
-                                        theme.textTheme.headlineSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                );
+                              }
+
+                              if (filteredProducts.isEmpty) {
+                                return Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        LucideIcons.search,
+                                        size: 64,
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No products match your filters',
+                                        style:
+                                            theme.textTheme.headlineSmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            );
-                          }
+                                );
+                              }
 
-                          final sortedProducts = [
-                            ...filteredProducts
-                          ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                              final sortedProducts = [
+                                ...filteredProducts
+                              ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-                          return GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio:
-                                  0.67, // Reduced to increase card height by 7%
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
-                            itemCount: sortedProducts.length,
-                            itemBuilder: (context, index) {
-                              final product = sortedProducts[index];
-                              return _buildProductCard(context, theme, product);
+                              return GridView.builder(
+                                padding: const EdgeInsets.all(16),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio:
+                                      0.67, // Reduced to increase card height by 7%
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                ),
+                                itemCount: sortedProducts.length,
+                                itemBuilder: (context, index) {
+                                  final product = sortedProducts[index];
+                                  return _buildProductCard(context, theme, product);
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
-                    ),
+                          ),
+                        ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Transform.translate(
-        offset: const Offset(0, -72),
-        child: FloatingActionButton(
-          onPressed: () {
-            Get.toNamed('/vendor/add-product-stepper');
-          },
-          backgroundColor: _blueColor,
-          elevation: 6,
-          child: const Icon(LucideIcons.plus, color: Colors.white),
-        ),
+          ),
+          // Floating Action Button positioned manually
+          Positioned(
+            right: 16,
+            bottom: 88, // Above the bottom nav bar (72 + 16 padding)
+            child: FloatingActionButton(
+              onPressed: () {
+                debugPrint('FAB pressed - Navigating to /vendor/add-product-stepper');
+                Get.toNamed('/vendor/add-product-stepper');
+              },
+              backgroundColor: _blueColor,
+              elevation: 6,
+              child: const Icon(LucideIcons.plus, color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }

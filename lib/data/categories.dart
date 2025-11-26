@@ -290,8 +290,14 @@ class Categories {
     Category(
       name: 'bags_and_wallets',
       displayName: 'Bags & Wallets',
-      iconPath: 'assets/category_icons/bags_and_ wallets.svg',
+      iconPath: 'assets/category_icons/bags_and_ wallets.svg', // Note: filename has space
       color: Color(0xFF795548),
+    ),
+    Category(
+      name: 'surface_cleaners',
+      displayName: 'Surface Cleaners',
+      iconPath: 'assets/category_icons/surface_cleaners.svg',
+      color: Color(0xFF4CAF50),
     ),
     Category(
       name: 'jewelry',

@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../data/categories.dart';
 
 class CategoryPicker extends StatefulWidget {
   final String selectedCategory;
@@ -23,76 +25,70 @@ class CategoryPicker extends StatefulWidget {
 class _CategoryPickerState extends State<CategoryPicker> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _filteredCategories = [];
+  StateSetter? _bottomSheetSetState;
 
   @override
   void initState() {
     super.initState();
-    _filteredCategories = widget.categories;
+    _filteredCategories = List<String>.from(widget.categories);
+
+    // Live search: filter immediately on every keystroke
+    _searchController.addListener(() {
+      final value = _searchController.text;
+      debugPrint('CategoryPicker: controller listener value = "$value"');
+      _filterCategories(value);
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _bottomSheetSetState = null;
     super.dispose();
   }
 
   void _filterCategories(String query) {
     debugPrint('CategoryPicker: _filterCategories called with: "$query"');
-    debugPrint('CategoryPicker: Current filtered categories count: ${_filteredCategories.length}');
-    setState(() {
-      if (query.isEmpty) {
-        _filteredCategories = widget.categories;
-        debugPrint('CategoryPicker: Showing all ${widget.categories.length} categories');
+
+    // Helper to update list and rebuild bottom sheet
+    void applyUpdate(List<String> updated) {
+      _filteredCategories = updated;
+      if (_bottomSheetSetState != null) {
+        _bottomSheetSetState!(() {});
       } else {
-        final lowercaseQuery = query.toLowerCase();
-        
-        // Create a list of categories with their priority scores
-        List<MapEntry<String, int>> categoryScores = [];
-        
-        for (String category in widget.categories) {
-          final lowercaseCategory = category.toLowerCase();
-          int score = 0;
-          
-          // Priority 1: Exact match
-          if (lowercaseCategory == lowercaseQuery) {
-            score = 1000;
-          }
-          // Priority 2: Starts with query
-          else if (lowercaseCategory.startsWith(lowercaseQuery)) {
-            score = 500;
-          }
-          // Priority 3: Word starts with query (space-separated words)
-          else if (lowercaseCategory.split(' ').any((word) => word.startsWith(lowercaseQuery))) {
-            score = 300;
-          }
-          // Priority 4: Contains query at the beginning of a word
-          else if (lowercaseCategory.split(' ').any((word) => word.contains(lowercaseQuery) && word.indexOf(lowercaseQuery) == 0)) {
-            score = 200;
-          }
-          // Priority 5: Contains query anywhere
-          else if (lowercaseCategory.contains(lowercaseQuery)) {
-            score = 100;
-          }
-          
-          // Only add categories that match the query
-          if (score > 0) {
-            categoryScores.add(MapEntry(category, score));
-          }
-        }
-        
-        // Sort by score (highest first), then alphabetically
-        categoryScores.sort((a, b) {
-          if (a.value != b.value) {
-            return b.value.compareTo(a.value); // Higher score first
-          }
-          return a.key.compareTo(b.key); // Alphabetical for same score
-        });
-        
-        _filteredCategories = categoryScores.map((entry) => entry.key).toList();
-        debugPrint('CategoryPicker: Found ${_filteredCategories.length} matching categories');
-        debugPrint('CategoryPicker: Filtered categories: ${_filteredCategories.take(5).join(", ")}${_filteredCategories.length > 5 ? "..." : ""}');
+        setState(() {});
       }
-    });
+    }
+
+    if (query.isEmpty || query.trim().isEmpty) {
+      final all = List<String>.from(widget.categories);
+      debugPrint('CategoryPicker: Showing all ${all.length} categories');
+      applyUpdate(all);
+      return;
+    }
+
+    final lowercaseQuery = query.toLowerCase().trim();
+
+    List<String> startsWithQuery = [];
+    List<String> containsQuery = [];
+
+    for (String category in widget.categories) {
+      final lowercaseCategory = category.toLowerCase();
+
+      if (lowercaseCategory.startsWith(lowercaseQuery)) {
+        startsWithQuery.add(category);
+      } else if (lowercaseCategory.contains(lowercaseQuery)) {
+        containsQuery.add(category);
+      }
+    }
+
+    startsWithQuery.sort();
+    containsQuery.sort();
+
+    final result = List<String>.from([...startsWithQuery, ...containsQuery]);
+    debugPrint(
+        'CategoryPicker: Filtered to ${result.length} categories (starts: ${startsWithQuery.length}, contains: ${containsQuery.length})');
+    applyUpdate(result);
   }
 
   void _showCategoryPicker() {
@@ -106,7 +102,12 @@ class _CategoryPickerState extends State<CategoryPicker> {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           color: Colors.black.withOpacity(0.3),
-          child: _buildCategoryPickerModal(),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              _bottomSheetSetState = setModalState;
+              return _buildCategoryPickerModal();
+            },
+          ),
         ),
       ),
     );
@@ -137,7 +138,10 @@ class _CategoryPickerState extends State<CategoryPicker> {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -149,17 +153,8 @@ class _CategoryPickerState extends State<CategoryPicker> {
                 Text(
                   'Select Category',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(LucideIcons.x),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    shape: const CircleBorder(),
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ],
             ),
@@ -171,7 +166,7 @@ class _CategoryPickerState extends State<CategoryPicker> {
             child: TextField(
               controller: _searchController,
               autofocus: false,
-              textInputAction: TextInputAction.search,
+              textInputAction: TextInputAction.done,
               decoration: InputDecoration(
                 hintText: 'Search categories...',
                 prefixIcon: const Icon(LucideIcons.search),
@@ -187,13 +182,15 @@ class _CategoryPickerState extends State<CategoryPicker> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.3),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                    color:
+                        Theme.of(context).colorScheme.outline.withOpacity(0.3),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -204,13 +201,8 @@ class _CategoryPickerState extends State<CategoryPicker> {
                   ),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                fillColor: Colors.white, // White background for search field
               ),
-              onChanged: (value) {
-                debugPrint('CategoryPicker: onChanged called with: "$value"');
-                _filterCategories(value);
-                setState(() {}); // Force rebuild to update suffix icon
-              },
             ),
           ),
           const SizedBox(height: 20),
@@ -224,27 +216,38 @@ class _CategoryPickerState extends State<CategoryPicker> {
                         Icon(
                           LucideIcons.search,
                           size: 48,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withOpacity(0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No categories found',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Try a different search term',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .withOpacity(0.7),
+                                  ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    key: ValueKey(_filteredCategories.length), // Force rebuild when list changes
+                    key: ValueKey(
+                        '${_filteredCategories.length}_${_searchController.text}'), // Force rebuild when list or search changes
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     itemCount: _filteredCategories.length,
                     itemBuilder: (context, index) {
@@ -252,8 +255,9 @@ class _CategoryPickerState extends State<CategoryPicker> {
                       final isSelected = category == widget.selectedCategory;
                       final searchQuery = _searchController.text.toLowerCase();
                       final matchType = _getMatchType(category, searchQuery);
-                      
-                      debugPrint('CategoryPicker: Building item $index: "$category"');
+
+                      debugPrint(
+                          'CategoryPicker: Building item $index: "$category"');
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
@@ -272,44 +276,56 @@ class _CategoryPickerState extends State<CategoryPicker> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.1)
                                     : _getBackgroundColor(context, matchType),
                                 borderRadius: BorderRadius.circular(12),
                                 border: isSelected
                                     ? Border.all(
-                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.3),
                                         width: 1,
                                       )
                                     : _getBorderColor(context, matchType),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    _getMatchIcon(matchType),
-                                    size: 20,
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : _getIconColor(context, matchType),
+                                  // Category SVG Icon (always in original color)
+                                  _buildCategoryIcon(
+                                    category,
+                                    size:
+                                        24, // Increased by 20% (20 * 1.2 = 24)
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
                                       category,
-                                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                        color: isSelected
-                                            ? Theme.of(context).colorScheme.primary
-                                            : _getTextColor(context, matchType),
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : _getFontWeight(matchType),
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            color: isSelected
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                : _getTextColor(
+                                                    context, matchType),
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : _getFontWeight(matchType),
+                                          ),
                                     ),
                                   ),
                                   if (isSelected)
                                     Icon(
                                       LucideIcons.check,
                                       size: 20,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                 ],
                               ),
@@ -329,13 +345,15 @@ class _CategoryPickerState extends State<CategoryPicker> {
   // Helper methods for match type styling
   String _getMatchType(String category, String query) {
     if (query.isEmpty) return 'none';
-    
+
     final lowercaseCategory = category.toLowerCase();
     final lowercaseQuery = query.toLowerCase();
-    
+
     if (lowercaseCategory == lowercaseQuery) return 'exact';
     if (lowercaseCategory.startsWith(lowercaseQuery)) return 'starts';
-    if (lowercaseCategory.split(' ').any((word) => word.startsWith(lowercaseQuery))) return 'word_starts';
+    if (lowercaseCategory
+        .split(' ')
+        .any((word) => word.startsWith(lowercaseQuery))) return 'word_starts';
     if (lowercaseCategory.contains(lowercaseQuery)) return 'contains';
     return 'none';
   }
@@ -358,22 +376,13 @@ class _CategoryPickerState extends State<CategoryPicker> {
     final theme = Theme.of(context);
     switch (matchType) {
       case 'exact':
-        return Border.all(color: theme.colorScheme.primary.withOpacity(0.4), width: 1);
+        return Border.all(
+            color: theme.colorScheme.primary.withOpacity(0.4), width: 1);
       case 'starts':
-        return Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 1);
+        return Border.all(
+            color: theme.colorScheme.primary.withOpacity(0.2), width: 1);
       default:
         return null;
-    }
-  }
-
-  Color _getIconColor(BuildContext context, String matchType) {
-    final theme = Theme.of(context);
-    switch (matchType) {
-      case 'exact':
-      case 'starts':
-        return theme.colorScheme.primary;
-      default:
-        return theme.colorScheme.onSurfaceVariant;
     }
   }
 
@@ -398,16 +407,46 @@ class _CategoryPickerState extends State<CategoryPicker> {
     }
   }
 
-  IconData _getMatchIcon(String matchType) {
-    switch (matchType) {
-      case 'exact':
-        return LucideIcons.star;
-      case 'starts':
-        return LucideIcons.arrowRight;
-      case 'word_starts':
-        return LucideIcons.search;
-      default:
-        return LucideIcons.tag;
+  // Helper function to get SVG path from category display name
+  String _getCategorySvgPath(String categoryDisplayName) {
+    final category = Categories.getCategoryByDisplayName(categoryDisplayName);
+    if (category != null && category.iconPath.isNotEmpty) {
+      return category.iconPath;
+    }
+    // Fallback: try to construct path from display name
+    final normalizedName = categoryDisplayName
+        .toLowerCase()
+        .replaceAll(' & ', '_and_')
+        .replaceAll(' ', '_')
+        .replaceAll(',', '')
+        .replaceAll("'", '');
+    return 'assets/category_icons/$normalizedName.svg';
+  }
+
+  // Build category SVG icon widget (always in original color)
+  Widget _buildCategoryIcon(String categoryDisplayName, {double? size}) {
+    final svgPath = _getCategorySvgPath(categoryDisplayName);
+    final iconSize = size ?? 24.0; // Default increased by 20% (20 * 1.2 = 24)
+
+    try {
+      return SvgPicture.asset(
+        svgPath,
+        width: iconSize,
+        height: iconSize,
+        // No colorFilter - keep original SVG colors
+        placeholderBuilder: (context) => Icon(
+          LucideIcons.tag,
+          size: iconSize,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      );
+    } catch (e) {
+      // Fallback to Lucide icon if SVG fails to load
+      return Icon(
+        LucideIcons.tag,
+        size: iconSize,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
     }
   }
 
@@ -427,16 +466,22 @@ class _CategoryPickerState extends State<CategoryPicker> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
             children: [
-              Icon(
-                LucideIcons.tag,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
+              // Category SVG Icon (always in original color)
+              widget.selectedCategory.isNotEmpty
+                  ? _buildCategoryIcon(
+                      widget.selectedCategory,
+                      size: 24, // Increased by 20% (20 * 1.2 = 24)
+                    )
+                  : Icon(
+                      LucideIcons.tag,
+                      color: theme.colorScheme.primary,
+                      size: 24, // Increased by 20% (20 * 1.2 = 24)
+                    ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  widget.selectedCategory.isNotEmpty 
-                      ? widget.selectedCategory 
+                  widget.selectedCategory.isNotEmpty
+                      ? widget.selectedCategory
                       : widget.hintText,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: widget.selectedCategory.isNotEmpty

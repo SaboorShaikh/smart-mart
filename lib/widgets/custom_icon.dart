@@ -59,6 +59,8 @@ class AppIcons {
   static const String edit = 'assets/icons/edit_icon.png';
   static const String delete = 'assets/icons/delete_card.png';
   static const String camera = 'assets/icons/camera.png';
+  static const String productUnit = 'assets/icons/product_unit.png';
+  static const String stockQuantity = 'assets/icons/stock_quantity.png';
 
   // Menu icons
   static const String help = 'assets/icons/help.png';

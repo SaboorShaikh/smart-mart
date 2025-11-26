@@ -34,6 +34,7 @@ import 'screens/vendor/store_settings_screen.dart';
 import 'screens/vendor/vendor_analytics_screen.dart';
 import 'screens/vendor/help_and_support_screen.dart';
 import 'screens/product_detail_screen.dart';
+import 'models/product.dart';
 import 'screens/auth/vendor_register_screen.dart';
 import 'screens/auth/vendor_location_screen.dart';
 import 'screens/auth/vendor_delivery_screen.dart';
@@ -215,7 +216,29 @@ class SmartMartApp extends StatelessWidget {
                   page: () => const AddProductScreen()),
               GetPage(
                   name: '/vendor/add-product-stepper',
-                  page: () => const AddProductStepperScreen()),
+                  page: () {
+                    // Handle both direct Product argument and map with step
+                    final args = Get.arguments;
+                    debugPrint('Route handler - arguments type: ${args?.runtimeType ?? 'null'}');
+                    if (args == null) {
+                      return const AddProductStepperScreen(initialStep: 0);
+                    } else if (args is Map) {
+                      final step = args['step'];
+                      final stepValue = step is int ? step : (step != null ? int.tryParse(step.toString()) ?? 0 : 0);
+                      debugPrint('Route handler - step: $stepValue');
+                      return AddProductStepperScreen(
+                        initialStep: stepValue,
+                        product: args['product'] as Product?,
+                      );
+                    } else if (args is Product) {
+                      return AddProductStepperScreen(
+                        initialStep: 0,
+                        product: args,
+                      );
+                    } else {
+                      return const AddProductStepperScreen(initialStep: 0);
+                    }
+                  }),
               GetPage(
                   name: '/vendor/test-stepper',
                   page: () => const TestStepperScreen()),

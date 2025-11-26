@@ -87,9 +87,57 @@ flutter:
     - assets/icons/total_sale.png
     - assets/icons/average_order_value.png
     - assets/icons/camera.png
+    - assets/icons/add_image.png
+    - assets/icons/product_unit.png
+    - assets/icons/stock_quantity.png
     - assets/icons/store settings.png
     - assets/icons/analytics.png
     - assets/icons/shop_smart.png
     - assets/icons/sell_easy.png
     - assets/icons/fast_delivery.png
-    - assets/category_icons/
+    - assets/category_icons/air_fresheners.svg
+    - assets/category_icons/baby_food.svg
+    - assets/category_icons/bags_and_ wallets.svg
+    - assets/category_icons/bakery_and_snacks.svg
+    - assets/category_icons/bathroom_cleaners.svg
+    - assets/category_icons/beverages_and_juices.svg
+    - assets/category_icons/cameras_and_accessories.svg
+    - assets/category_icons/computers_and_laptops.svg
+    - assets/category_icons/cooking_oils_and_ghee.svg
+    - assets/category_icons/cookware.svg
+    - assets/category_icons/dairy_and_eggs.svg
+    - assets/category_icons/dental_care.svg
+    - assets/category_icons/dinnerware.svg
+    - assets/category_icons/dishwashing_supplies.svg
+    - assets/category_icons/feminine_hygiene.svg
+    - assets/category_icons/footwear.svg
+    - assets/category_icons/fragrances_and_deodorants.svg
+    - assets/category_icons/frozen_foods.svg
+    - assets/category_icons/fruits_and_vegetables.svg
+    - assets/category_icons/hair_care.svg
+    - assets/category_icons/headphones_and_earphones.svg
+    - assets/category_icons/health_supplements.svg
+    - assets/category_icons/home_appliances.svg
+    - assets/category_icons/jewelry.svg
+    - assets/category_icons/kids_clothing.svg
+    - assets/category_icons/kitchen_appliances.svg
+    - assets/category_icons/kitchen_storage.svg
+    - assets/category_icons/laundry_detergents.svg
+    - assets/category_icons/makeup_and_cosmetics.svg
+    - assets/category_icons/meat_and_seafood.svg
+    - assets/category_icons/mens_clothing.svg
+    - assets/category_icons/mobiles_and_tablets.svg
+    - assets/category_icons/paper_products.svg
+    - assets/category_icons/personal_care.svg
+    - assets/category_icons/pest_control.svg
+    - assets/category_icons/rice_pulses_and_grains.svg
+    - assets/category_icons/shaving_and_grooming.svg
+    - assets/category_icons/skin_care.svg
+    - assets/category_icons/smartwatches.svg
+    - assets/category_icons/spices_and_masalas.svg
+    - assets/category_icons/sunglasses.svg
+    - assets/category_icons/surface_cleaners.svg
+    - assets/category_icons/tvs_and_home_entertainment.svg
+    - assets/category_icons/utensils.svg
+    - assets/category_icons/watches.svg
+    - assets/category_icons/womens_clothing.svg

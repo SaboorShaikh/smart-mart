@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../widgets/custom_input.dart';
+import 'package:get/get.dart';
 import '../../widgets/category_picker.dart';
+import '../../widgets/custom_icon.dart';
 
 class AddProductStep2Screen extends StatefulWidget {
   final String selectedCategory;
@@ -29,7 +30,6 @@ class _AddProductStep2ScreenState extends State<AddProductStep2Screen> {
   final _priceController = TextEditingController();
   final _unitController = TextEditingController();
   final _stockController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
   String _selectedCategory = '';
 
   @override
@@ -52,242 +52,597 @@ class _AddProductStep2ScreenState extends State<AddProductStep2Screen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final statusBarHeight = MediaQuery.of(context).padding.top;
 
-    return SizedBox(
-      width: double.infinity,
-      height: double.infinity,
-      child: GestureDetector(
+    return Scaffold(
+      backgroundColor: isDark
+          ? const Color(0xFF0F172A)
+          : const Color(0xFFF4F5F7), // Light gray background
+      body: GestureDetector(
         onTap: () {
-          // Dismiss keyboard when tapping outside text fields
           FocusScope.of(context).unfocus();
         },
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+          // Top App Bar
+          Container(
+            padding: EdgeInsets.fromLTRB(16, statusBarHeight + 8, 16, 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF0F172A)
+                  : Colors.white, // White background for light mode
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? const Color(0xFF1E293B).withOpacity(0.8)
+                      : const Color(0xFFE2E8F0).withOpacity(0.8),
+                  width: 1,
+                ),
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
-                // Step indicator
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withOpacity(0.2),
+                // Header Row with Back Button, Indicators, and Spacer
+                Row(
+                  children: [
+                    // Back Button
+                    IconButton(
+                      icon: Icon(
+                        LucideIcons.arrowLeft,
+                        color: isDark ? Colors.white : const Color(0xFF18181B),
+                      ),
+                      onPressed: () => Get.back(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.tag,
-                        color: theme.colorScheme.primary,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Step 2: Category & Pricing',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    // Page Indicators (6 dots)
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(6, (index) {
+                          return Container(
+                            width: 8,
+                            height: 8,
+                            margin: EdgeInsets.only(
+                              right: index < 5 ? 8 : 0,
                             ),
-                            Text(
-                              'Set category, price, unit and stock quantity',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                            decoration: BoxDecoration(
+                              color: index == 1
+                                  ? const Color(0xFF225FEC)
+                                  : (isDark
+                                      ? const Color(0xFF3F3F46)
+                                      : const Color(0xFFD4D4D8)),
+                              shape: BoxShape.circle,
                             ),
-                          ],
-                        ),
+                          );
+                        }),
                       ),
-                    ],
+                    ),
+                    // Spacer
+                    const SizedBox(width: 40),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Title
+                Text(
+                  'Category & Pricing',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF18181B),
+                    letterSpacing: -0.5,
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // Category Selection
-                _buildCategorySection(theme),
-                const SizedBox(height: 24),
-
-                // Pricing Section
-                _buildPricingSection(theme),
-                const SizedBox(height: 24),
-
-                // Stock Section
-                _buildStockSection(theme),
-                const SizedBox(height: 24),
-
-                // Help text
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest
-                        .withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.info,
-                        size: 16,
-                        color: theme.colorScheme.onSurfaceVariant,
+                const SizedBox(height: 16),
+                // Progress Bar Section
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Stage 2 of 6',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isDark
+                            ? const Color(0xFFA1A1AA)
+                            : const Color(0xFF71717A),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Choose the appropriate category and set competitive pricing. Stock quantity helps customers know availability.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 12),
+                    // Progress bar with equal padding
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
+                      child: Container(
+                        width: double.infinity,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: FractionallySizedBox(
+                            widthFactor: 2 / 6, // 33% for stage 2
+                            child: Container(
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF225FEC),
+                                borderRadius: BorderRadius.circular(9999),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-        ),
+
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  // Product Category Section
+                  _buildCategorySection(theme, isDark),
+                  const SizedBox(height: 24),
+
+                  // Pricing Information Section
+                  _buildPricingSection(theme, isDark),
+                  const SizedBox(height: 24),
+
+                  // Stock Information Section
+                  _buildStockSection(theme, isDark),
+                  const SizedBox(height: 100), // Space for fixed bottom button
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
       ),
     );
   }
 
-  Widget _buildCategorySection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Product Category *',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+  Widget _buildCategorySection(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0F172A).withOpacity(0.5)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.1)
+                : const Color(0xFFE2E8F0).withOpacity(0.5),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Select the category that best describes your product',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 12),
-        CategoryPicker(
-          selectedCategory: _selectedCategory,
-          categories: widget.categories,
-          onCategorySelected: (category) {
-            setState(() {
-              _selectedCategory = category;
-            });
-            _notifyDataChanged();
-          },
-          hintText: 'Select Category',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPricingSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Pricing Information *',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: CustomInput(
-                value: _priceController.text,
-                label: 'Price *',
-                hint: '0.00',
-                keyboardType: TextInputType.number,
-                prefixIcon: Icon(LucideIcons.dollarSign),
-                onChanged: (value) {
-                  _priceController.text = value;
-                  _notifyDataChanged();
-                },
-              ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Product Category',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF18181B),
+              letterSpacing: -0.3,
+              height: 1.2,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 3,
-              child: CustomInput(
-                value: _unitController.text,
-                label: 'Unit *',
-                hint: 'e.g., 1kg, 500g, 1 piece',
-                prefixIcon: Icon(LucideIcons.package),
-                onChanged: (value) {
-                  _unitController.text = value;
-                  _notifyDataChanged();
-                },
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Select the category that best describes your product.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.normal,
+              color: isDark
+                  ? const Color(0xFFA1A1AA)
+                  : const Color(0xFF71717A),
+              height: 1.5,
             ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStockSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Stock Information *',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
           ),
-        ),
-        const SizedBox(height: 16),
-        CustomInput(
-          value: _stockController.text,
-          label: 'Stock Quantity *',
-          hint: '0',
-          keyboardType: TextInputType.number,
-          prefixIcon: Icon(LucideIcons.warehouse),
-          onChanged: (value) {
-            _stockController.text = value;
-            _notifyDataChanged();
-          },
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
+          const SizedBox(height: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                LucideIcons.trendingUp,
-                size: 16,
-                color: theme.colorScheme.primary,
+              Text(
+                'Category *',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? const Color(0xFFD4D4D8)
+                      : const Color(0xFF3F3F46),
+                ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Higher stock quantities can improve product visibility',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
+              const SizedBox(height: 8),
+              CategoryPicker(
+                selectedCategory: _selectedCategory,
+                categories: widget.categories,
+                onCategorySelected: (category) {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+                  _notifyDataChanged();
+                },
+                hintText: 'Select Category',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPricingSection(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0F172A).withOpacity(0.5)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.1)
+                : const Color(0xFFE2E8F0).withOpacity(0.5),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pricing Information',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF18181B),
+              letterSpacing: -0.3,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Price and Unit vertically aligned in a single column
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Price Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Price *',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? const Color(0xFFD4D4D8)
+                          : const Color(0xFF3F3F46),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _priceController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    onChanged: (value) => _notifyDataChanged(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDark ? Colors.white : const Color(0xFF18181B),
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '0.00',
+                      hintStyle: TextStyle(
+                        color: isDark
+                            ? const Color(0xFF71717A)
+                            : const Color(0xFFA1A1AA),
+                      ),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 8),
+                        child: Text(
+                          'Rs',
+                          style: TextStyle(
+                            fontSize: 19.2, // 20% larger than 16
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 0,
+                        minHeight: 0,
+                      ),
+                      filled: true,
+                      fillColor:
+                          isDark ? const Color(0xFF1E293B) : Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF225FEC),
+                          width: 1,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Unit Field
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Unit *',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? const Color(0xFFD4D4D8)
+                          : const Color(0xFF3F3F46),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _unitController,
+                    onChanged: (value) => _notifyDataChanged(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDark ? Colors.white : const Color(0xFF18181B),
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'e.g., 1kg',
+                      hintStyle: TextStyle(
+                        color: isDark
+                            ? const Color(0xFF71717A)
+                            : const Color(0xFFA1A1AA),
+                      ),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.only(left: 12, right: 8),
+                        child: CustomIcon(
+                          assetPath: AppIcons.productUnit,
+                          size: 22,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 0,
+                        minHeight: 0,
+                      ),
+                      filled: true,
+                      fillColor:
+                          isDark ? const Color(0xFF1E293B) : Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF225FEC),
+                          width: 1,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStockSection(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0F172A).withOpacity(0.5)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.1)
+                : const Color(0xFFE2E8F0).withOpacity(0.5),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Stock Information',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF18181B),
+              letterSpacing: -0.3,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Stock Quantity *',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? const Color(0xFFD4D4D8)
+                      : const Color(0xFF3F3F46),
+                ),
+              ),
+              const SizedBox(height: 8),
+                  TextField(
+                controller: _stockController,
+                keyboardType: TextInputType.number,
+                onChanged: (value) => _notifyDataChanged(),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? Colors.white : const Color(0xFF18181B),
+                ),
+                decoration: InputDecoration(
+                  hintText: '0',
+                  hintStyle: TextStyle(
+                    color: isDark
+                        ? const Color(0xFF71717A)
+                        : const Color(0xFFA1A1AA),
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 8),
+                    child: CustomIcon(
+                      assetPath: AppIcons.stockQuantity,
+                      size: 24.2, // 10% larger than 22
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 0,
+                    minHeight: 0,
+                  ),
+                  filled: true,
+                  fillColor: isDark
+                      ? const Color(0xFF1E293B)
+                      : Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFCBD5E1),
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFCBD5E1),
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF225FEC),
+                      width: 1,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
                   ),
                 ),
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          // Info Box
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF225FEC).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  LucideIcons.info,
+                  size: 20,
+                  color: const Color(0xFF225FEC),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Higher stock quantities can improve product visibility.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? const Color(0xFFD4D4D8)
+                          : const Color(0xFF334155),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
