@@ -91,19 +91,31 @@ class _AddProductStep1ScreenState extends State<AddProductStep1Screen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(6, (index) {
+                            final isActive = index <= 0; // Stage 1 is index 0
+                            final isCurrent = index == 0;
                             return Container(
-                              width: 8,
-                              height: 8,
+                              width: isCurrent ? 12 : 8,
+                              height: isCurrent ? 12 : 8,
                               margin: EdgeInsets.only(
                                 right: index < 5 ? 8 : 0,
                               ),
                               decoration: BoxDecoration(
-                                color: index == 0
+                                color: isActive
                                     ? const Color(0xFF225FEC)
                                     : (isDark
                                         ? const Color(0xFF3F3F46)
                                         : const Color(0xFFD4D4D8)),
                                 shape: BoxShape.circle,
+                                boxShadow: isCurrent
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF225FEC)
+                                              .withOpacity(0.2),
+                                          blurRadius: 8,
+                                          spreadRadius: 2,
+                                        ),
+                                      ]
+                                    : null,
                               ),
                             );
                           }),

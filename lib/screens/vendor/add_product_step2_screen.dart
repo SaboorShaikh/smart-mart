@@ -102,19 +102,31 @@ class _AddProductStep2ScreenState extends State<AddProductStep2Screen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(6, (index) {
+                          final isActive = index <= 1; // Stage 2 is index 1
+                          final isCurrent = index == 1;
                           return Container(
-                            width: 8,
-                            height: 8,
+                            width: isCurrent ? 12 : 8,
+                            height: isCurrent ? 12 : 8,
                             margin: EdgeInsets.only(
                               right: index < 5 ? 8 : 0,
                             ),
                             decoration: BoxDecoration(
-                              color: index == 1
+                              color: isActive
                                   ? const Color(0xFF225FEC)
                                   : (isDark
                                       ? const Color(0xFF3F3F46)
                                       : const Color(0xFFD4D4D8)),
                               shape: BoxShape.circle,
+                              boxShadow: isCurrent
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF225FEC)
+                                            .withOpacity(0.2),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  : null,
                             ),
                           );
                         }),

@@ -38,7 +38,6 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
   bool _isLoading = false;
   bool get _isEditMode => widget.product != null;
 
-
   // Helper method to compare two File lists
   bool _listEquals(List<File> list1, List<File> list2) {
     if (list1.length != list2.length) return false;
@@ -74,9 +73,11 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
   void initState() {
     super.initState();
     _currentStep = widget.initialStep;
-    debugPrint('AddProductStepper initState - initialStep: ${widget.initialStep}, _currentStep: $_currentStep');
+    debugPrint(
+        'AddProductStepper initState - initialStep: ${widget.initialStep}, _currentStep: $_currentStep');
     _initializeFields();
-    debugPrint('AddProductStepper initState - After init, _currentStep: $_currentStep');
+    debugPrint(
+        'AddProductStepper initState - After init, _currentStep: $_currentStep');
   }
 
   void _initializeFields() {
@@ -86,7 +87,8 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
       debugPrint('Initializing from navigation arguments');
       _productName = args['productName'] as String? ?? '';
       _description = args['description'] as String? ?? '';
-      _selectedCategory = args['selectedCategory'] as String? ?? 'Fruits & Vegetables';
+      _selectedCategory =
+          args['selectedCategory'] as String? ?? 'Fruits & Vegetables';
       _price = args['price'] as String? ?? '';
       _unit = args['unit'] as String? ?? '';
       _stockQuantity = args['stockQuantity'] as String? ?? '';
@@ -102,11 +104,13 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
       _nutritionInfo = args['nutritionInfo'] as String? ?? '';
       _tags = List<String>.from(args['tags'] as List? ?? []);
       _existingImageUrls.clear();
-      _existingImageUrls.addAll(List<String>.from(args['existingImageUrls'] as List? ?? []));
-      debugPrint('Initialized from args - Name: $_productName, Images: ${_existingImageUrls.length}');
+      _existingImageUrls
+          .addAll(List<String>.from(args['existingImageUrls'] as List? ?? []));
+      debugPrint(
+          'Initialized from args - Name: $_productName, Images: ${_existingImageUrls.length}');
       return;
     }
-    
+
     if (_isEditMode && widget.product != null) {
       final product = widget.product!;
       _productName = product.name;
@@ -253,6 +257,159 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
         ),
       ];
 
+  Widget _buildProgressIndicator(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        children: [
+          // Progress Bar Section
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Stage ${_currentStep + 1} of 6',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? const Color(0xFFD4D4D8)
+                      : const Color(0xFF333333),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: (_currentStep + 1) / 6,
+                    child: Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF225FEC),
+                        borderRadius: BorderRadius.circular(9999),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getStageTitle() {
+    switch (_currentStep) {
+      case 2:
+        return 'Product Details';
+      case 3:
+        return 'Detailed Information';
+      case 4:
+        return 'Nutrition Information';
+      case 5:
+        return 'Product Tags';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildStepHeader(ThemeData theme, bool isDark) {
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        child: Row(
+          children: [
+            // Back button
+            IconButton(
+              icon: Icon(
+                LucideIcons.arrowLeft,
+                color: isDark ? Colors.white : const Color(0xFF18181B),
+              ),
+              onPressed: () => Get.back(),
+            ),
+            // Dots centered
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(6, (index) {
+                  final isActive = index <= _currentStep;
+                  final isCurrent = index == _currentStep;
+                  return Container(
+                    width: isCurrent ? 12 : 8,
+                    height: isCurrent ? 12 : 8,
+                    margin: EdgeInsets.only(
+                      right: index < 5 ? 12 : 0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? const Color(0xFF225FEC)
+                          : (isDark
+                              ? const Color(0xFF3F3F46)
+                              : const Color(0xFFD4D4D8)),
+                      shape: BoxShape.circle,
+                      boxShadow: isCurrent
+                          ? [
+                              BoxShadow(
+                                color:
+                                    const Color(0xFF225FEC).withOpacity(0.2),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  );
+                }),
+              ),
+            ),
+            // Start Over / Save actions
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_currentStep > 0)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _currentStep = 0;
+                      });
+                    },
+                    child: Text(
+                      'Start Over',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                if (_currentStep == 5)
+                  TextButton(
+                    onPressed: _isLoading ? null : _saveProduct,
+                    child: Text(
+                      _isEditMode ? 'Update' : 'Save',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint('AddProductStepperScreen - build() called');
@@ -300,97 +457,45 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: (_currentStep == 0 || _currentStep == 1)
-          ? null // Hide AppBar for steps 1 and 2 as they have their own headers
-          : AppBar(
-              title: Text(
-                  '${_isEditMode ? "Edit" : "Add"} Product - Step ${_currentStep + 1} of 6'),
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Get.back(),
-              ),
-              actions: [
-                if (_currentStep > 0)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _currentStep = 0;
-                      });
-                    },
-                    child: Text(
-                      'Start Over',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                if (_currentStep == 5)
-                  TextButton(
-                    onPressed: _isLoading ? null : _saveProduct,
-                    child: Text(
-                      _isEditMode ? 'Update' : 'Save',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+      appBar: null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
                 Column(
                   children: [
-                    // Progress indicator (only for steps 3-6, steps 1-2 have their own)
+                    if (_currentStep > 1) _buildStepHeader(theme, isDark),
                     if (_currentStep > 1)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: List.generate(6, (index) {
-                                return Expanded(
-                                  child: Container(
-                                    height: 4,
-                                    margin: EdgeInsets.only(
-                                      right: index < 5 ? 8 : 0,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: index <= _currentStep
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.outline
-                                              .withOpacity(0.3),
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                );
-                              }),
+                      Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            _getStageTitle(),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Step ${_currentStep + 1} of 6',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
+                    if (_currentStep > 1)
+                      const SizedBox(height: 8),
+                    if (_currentStep > 1)
+                      _buildProgressIndicator(theme, isDark),
                     // Current step content
                     Expanded(
                       child: _steps[_currentStep],
                     ),
                     // Spacer for fixed bottom button
-                    if (_currentStep == 0 || _currentStep == 1) const SizedBox(height: 80),
+                    if (_currentStep == 0) const SizedBox(height: 80),
+                    // Spacer for floating buttons (stages 2-6, steps 1-5)
+                    if (_currentStep > 0) const SizedBox(height: 100),
                   ],
                 ),
-                // Fixed Bottom Navigation Button (for steps 0 and 1)
-                if (_currentStep == 0 || _currentStep == 1)
+                // Fixed Bottom Navigation Button (for step 0 - only Next)
+                if (_currentStep == 0)
                   Positioned(
                     left: 0,
                     right: 0,
@@ -415,13 +520,16 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: canProceed ? () {
-                                debugPrint('Next button pressed');
-                                debugPrint('Can proceed: $canProceed');
-                                debugPrint('Current step: $_currentStep');
-                                debugPrint('Step 0 validation - Images: ${_selectedImages.length}, Name: $_productName, Desc: $_description');
-                                _nextStep();
-                              } : null,
+                              onPressed: canProceed
+                                  ? () {
+                                      debugPrint('Next button pressed');
+                                      debugPrint('Can proceed: $canProceed');
+                                      debugPrint('Current step: $_currentStep');
+                                      debugPrint(
+                                          'Step 0 validation - Images: ${_selectedImages.length}, Name: $_productName, Desc: $_description');
+                                      _nextStep();
+                                    }
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: canProceed
                                     ? const Color(0xFF225FEC)
@@ -478,52 +586,69 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
                           );
                         },
                       ),
-                      ),
+                    ),
                   ),
-                // Navigation buttons for steps 3-6
-                if (_currentStep > 1)
+                // Navigation buttons for steps 1-5 (Previous and Next)
+                if (_currentStep > 0)
                   Positioned(
                     left: 0,
                     right: 0,
                     bottom: 0,
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                       decoration: BoxDecoration(
                         color: theme.scaffoldBackgroundColor,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _previousStep,
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text('Previous'),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _canProceedToNext()
-                                  ? (_currentStep == 5 ? _showReview : _nextStep)
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF225FEC),
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(_currentStep == 5 ? 'Review' : 'Next'),
-                            ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark
+                                ? Colors.black.withOpacity(0.3)
+                                : Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, -2),
+                            spreadRadius: 0,
                           ),
                         ],
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: _previousStep,
+                                style: OutlinedButton.styleFrom(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text('Previous'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _canProceedToNext()
+                                    ? (_currentStep == 5
+                                        ? _showReview
+                                        : _nextStep)
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF225FEC),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child:
+                                    Text(_currentStep == 5 ? 'Review' : 'Next'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -559,43 +684,15 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
     if (_currentStep < 5) {
       final nextStep = _currentStep + 1;
       debugPrint('Navigating to step $nextStep');
-      debugPrint('Current data - Name: $_productName, Images: ${_selectedImages.length}');
+      debugPrint(
+          'Current data - Name: $_productName, Images: ${_selectedImages.length}');
       debugPrint('Current data - Category: $_selectedCategory, Price: $_price');
-      
-      // Pass all current data through arguments to preserve state
-      final arguments = {
-        'step': nextStep,
-        'product': widget.product,
-        'productName': _productName,
-        'description': _description,
-        'selectedCategory': _selectedCategory,
-        'price': _price,
-        'unit': _unit,
-        'stockQuantity': _stockQuantity,
-        'brand': _brand,
-        'origin': _origin,
-        'expiryDate': _expiryDate,
-        'barcode': _barcode,
-        'manufacturer': _manufacturer,
-        'detailedDescription': _detailedDescription,
-        'features': _features,
-        'storageInstructions': _storageInstructions,
-        'allergens': _allergens,
-        'nutritionInfo': _nutritionInfo,
-        'tags': _tags,
-        'existingImageUrls': _existingImageUrls,
-        // Note: File objects can't be serialized, so we'll need to handle images differently
-      };
-      
-      debugPrint('Passing arguments with step: $nextStep');
-      // Use Get.off with direct widget creation to ensure new instance
-      Get.off(
-        () => AddProductStepperScreen(
-          initialStep: nextStep,
-          product: widget.product,
-        ),
-        arguments: arguments,
-      );
+
+      // Simply update the current step using setState
+      // This preserves all state including File objects
+      setState(() {
+        _currentStep = nextStep;
+      });
     }
   }
 
@@ -603,35 +700,12 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
     if (_currentStep > 0) {
       final previousStep = _currentStep - 1;
       debugPrint('Navigating back to step $previousStep');
-      
-      // Pass all current data through arguments to preserve state
-      final arguments = {
-        'step': previousStep,
-        'product': widget.product,
-        'productName': _productName,
-        'description': _description,
-        'selectedCategory': _selectedCategory,
-        'price': _price,
-        'unit': _unit,
-        'stockQuantity': _stockQuantity,
-        'brand': _brand,
-        'origin': _origin,
-        'expiryDate': _expiryDate,
-        'barcode': _barcode,
-        'manufacturer': _manufacturer,
-        'detailedDescription': _detailedDescription,
-        'features': _features,
-        'storageInstructions': _storageInstructions,
-        'allergens': _allergens,
-        'nutritionInfo': _nutritionInfo,
-        'tags': _tags,
-        'existingImageUrls': _existingImageUrls,
-      };
-      
-      Get.offNamed(
-        '/vendor/add-product-stepper',
-        arguments: arguments,
-      );
+
+      // Simply update the current step using setState
+      // This preserves all state including File objects
+      setState(() {
+        _currentStep = previousStep;
+      });
     }
   }
 

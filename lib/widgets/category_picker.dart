@@ -353,7 +353,9 @@ class _CategoryPickerState extends State<CategoryPicker> {
     if (lowercaseCategory.startsWith(lowercaseQuery)) return 'starts';
     if (lowercaseCategory
         .split(' ')
-        .any((word) => word.startsWith(lowercaseQuery))) return 'word_starts';
+        .any((word) => word.startsWith(lowercaseQuery))) {
+      return 'word_starts';
+    }
     if (lowercaseCategory.contains(lowercaseQuery)) return 'contains';
     return 'none';
   }

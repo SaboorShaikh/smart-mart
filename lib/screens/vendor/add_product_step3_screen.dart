@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../widgets/custom_input.dart';
 
 class AddProductStep3Screen extends StatefulWidget {
   final String brand;
@@ -54,198 +53,309 @@ class _AddProductStep3ScreenState extends State<AddProductStep3Screen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () {
-        // Dismiss keyboard when tapping outside text fields
         FocusScope.of(context).unfocus();
       },
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120), // Extra bottom padding for floating buttons
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Step indicator
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.2),
+            // Form Fields
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Brand Information
+                _buildBrandSection(theme, isDark),
+                const SizedBox(height: 24),
+
+                // Origin Information
+                _buildOriginSection(theme, isDark),
+                const SizedBox(height: 24),
+
+                // Expiry Information
+                _buildExpirySection(theme, isDark),
+                const SizedBox(height: 24),
+
+                // Additional Details
+                _buildAdditionalDetailsSection(theme, isDark),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+
+            // Helper Text
+            Center(
+              child: Text(
+                'These details help customers make informed decisions and build trust in your products.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 14,
+                  color: isDark
+                      ? const Color(0xFFA1A1AA)
+                      : const Color(0xFF757575),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    LucideIcons.package,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Step 3: Product Details',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          'Add brand, origin, expiry date and other details',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
-            const SizedBox(height: 24),
 
-            // Brand Information
-            _buildBrandSection(theme),
             const SizedBox(height: 24),
-
-            // Origin Information
-            _buildOriginSection(theme),
-            const SizedBox(height: 24),
-
-            // Expiry Date
-            _buildExpirySection(theme),
-            const SizedBox(height: 24),
-
-            // Barcode & Manufacturer
-            _buildAdditionalDetailsSection(theme),
-            const SizedBox(height: 24),
-
-            // Help text
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    LucideIcons.info,
-                    size: 16,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'These details help customers make informed decisions and build trust in your products.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBrandSection(ThemeData theme) {
+  Widget _buildBrandSection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Brand Information',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? const Color(0xFFD4D4D8)
+                : const Color(0xFF333333),
           ),
         ),
-        const SizedBox(height: 16),
-        CustomInput(
-          value: _brandController.text,
-          label: 'Brand Name',
-          hint: 'e.g., Naturel, Fresh Farm, Premium',
-          prefixIcon: Icon(LucideIcons.award),
-          onChanged: (value) {
-            _brandController.text = value;
-            _notifyDataChanged();
-          },
+        const SizedBox(height: 8),
+        TextField(
+          controller: _brandController,
+          onChanged: (value) => _notifyDataChanged(),
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? Colors.white : const Color(0xFF333333),
+          ),
+          decoration: InputDecoration(
+            hintText: 'Brand Name',
+            hintStyle: TextStyle(
+              color: isDark
+                  ? const Color(0xFF71717A)
+                  : const Color(0xFF757575),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 16, right: 8),
+              child: Icon(
+                LucideIcons.award,
+                size: 20,
+                color: isDark
+                    ? const Color(0xFF71717A)
+                    : const Color(0xFF757575),
+              ),
+            ),
+            filled: true,
+            fillColor: isDark
+                ? const Color(0xFF0F172A)
+                : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: Color(0xFF225FEC),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildOriginSection(ThemeData theme) {
+  Widget _buildOriginSection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Origin Information',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? const Color(0xFFD4D4D8)
+                : const Color(0xFF333333),
           ),
         ),
-        const SizedBox(height: 16),
-        CustomInput(
-          value: _originController.text,
-          label: 'Origin/Country',
-          hint: 'e.g., Pakistan, India, Local',
-          prefixIcon: Icon(LucideIcons.mapPin),
-          onChanged: (value) {
-            _originController.text = value;
-            _notifyDataChanged();
-          },
+        const SizedBox(height: 8),
+        TextField(
+          controller: _originController,
+          onChanged: (value) => _notifyDataChanged(),
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? Colors.white : const Color(0xFF333333),
+          ),
+          decoration: InputDecoration(
+            hintText: 'Origin / Country',
+            hintStyle: TextStyle(
+              color: isDark
+                  ? const Color(0xFF71717A)
+                  : const Color(0xFF757575),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 16, right: 8),
+              child: Icon(
+                LucideIcons.mapPin,
+                size: 20,
+                color: isDark
+                    ? const Color(0xFF71717A)
+                    : const Color(0xFF757575),
+              ),
+            ),
+            filled: true,
+            fillColor: isDark
+                ? const Color(0xFF0F172A)
+                : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: Color(0xFF225FEC),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildExpirySection(ThemeData theme) {
+  Widget _buildExpirySection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Expiry Information',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? const Color(0xFFD4D4D8)
+                : const Color(0xFF333333),
           ),
         ),
-        const SizedBox(height: 16),
-        CustomInput(
-          value: _expiryDateController.text,
-          label: 'Expiry Date',
-          hint: 'DD/MM/YYYY',
-          prefixIcon: Icon(LucideIcons.calendar),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _expiryDateController,
           readOnly: true,
           onTap: () => _selectExpiryDate(),
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? Colors.white : const Color(0xFF333333),
+          ),
+          decoration: InputDecoration(
+            hintText: 'Expiry Date',
+            hintStyle: TextStyle(
+              color: isDark
+                  ? const Color(0xFF71717A)
+                  : const Color(0xFF757575),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 16, right: 8),
+              child: Icon(
+                LucideIcons.calendar,
+                size: 20,
+                color: isDark
+                    ? const Color(0xFF71717A)
+                    : const Color(0xFF757575),
+              ),
+            ),
+            filled: true,
+            fillColor: isDark
+                ? const Color(0xFF0F172A)
+                : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: Color(0xFF225FEC),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
+        // Info Box
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: const Color(0xFFFFA726).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
               Icon(
-                LucideIcons.clock,
+                LucideIcons.info,
                 size: 16,
-                color: Colors.orange,
+                color: const Color(0xFFFFA726),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Leave empty if product doesn\'t expire',
+                  'Leave empty if product doesn\'t expire.',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.orange,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFFFFA726),
                   ),
                 ),
               ),
@@ -256,37 +366,137 @@ class _AddProductStep3ScreenState extends State<AddProductStep3Screen> {
     );
   }
 
-  Widget _buildAdditionalDetailsSection(ThemeData theme) {
+  Widget _buildAdditionalDetailsSection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Additional Details',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? const Color(0xFFD4D4D8)
+                : const Color(0xFF333333),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Barcode Field
+        TextField(
+          controller: _barcodeController,
+          onChanged: (value) => _notifyDataChanged(),
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? Colors.white : const Color(0xFF333333),
+          ),
+          decoration: InputDecoration(
+            hintText: 'Product barcode or SKU',
+            hintStyle: TextStyle(
+              color: isDark
+                  ? const Color(0xFF71717A)
+                  : const Color(0xFF757575),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 16, right: 8),
+              child: Icon(
+                LucideIcons.scan,
+                size: 20,
+                color: isDark
+                    ? const Color(0xFF71717A)
+                    : const Color(0xFF757575),
+              ),
+            ),
+            filled: true,
+            fillColor: isDark
+                ? const Color(0xFF0F172A)
+                : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: Color(0xFF225FEC),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
         const SizedBox(height: 16),
-        CustomInput(
-          value: _barcodeController.text,
-          label: 'Barcode',
-          hint: 'Product barcode or SKU',
-          prefixIcon: Icon(LucideIcons.scan),
-          onChanged: (value) {
-            _barcodeController.text = value;
-            _notifyDataChanged();
-          },
-        ),
-        const SizedBox(height: 16),
-        CustomInput(
-          value: _manufacturerController.text,
-          label: 'Manufacturer',
-          hint: 'Manufacturer name',
-          prefixIcon: Icon(LucideIcons.factory),
-          onChanged: (value) {
-            _manufacturerController.text = value;
-            _notifyDataChanged();
-          },
+        // Manufacturer Field
+        TextField(
+          controller: _manufacturerController,
+          onChanged: (value) => _notifyDataChanged(),
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? Colors.white : const Color(0xFF333333),
+          ),
+          decoration: InputDecoration(
+            hintText: 'Manufacturer name',
+            hintStyle: TextStyle(
+              color: isDark
+                  ? const Color(0xFF71717A)
+                  : const Color(0xFF757575),
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 16, right: 8),
+              child: Icon(
+                LucideIcons.factory,
+                size: 20,
+                color: isDark
+                    ? const Color(0xFF71717A)
+                    : const Color(0xFF757575),
+              ),
+            ),
+            filled: true,
+            fillColor: isDark
+                ? const Color(0xFF0F172A)
+                : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: Color(0xFF225FEC),
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
         ),
       ],
     );

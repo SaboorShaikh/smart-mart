@@ -60,49 +60,6 @@ class _AddProductStep4ScreenState extends State<AddProductStep4Screen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Step indicator
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.2),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    LucideIcons.fileText,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Step 4: Detailed Information',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          'Add comprehensive product information',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
             // Detailed Description
             _buildDetailedDescriptionSection(theme),
             const SizedBox(height: 24),
