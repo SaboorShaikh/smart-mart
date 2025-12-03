@@ -420,26 +420,34 @@ class _AddProductStep4ScreenState extends State<AddProductStep4Screen> {
               ),
             ),
             Positioned(
-              right: 12,
-              child: IconButton(
-                icon: Icon(
-                  LucideIcons.chevronRight,
-                  size: 20,
-                  color: isDark
-                      ? const Color(0xFF71717A)
-                      : const Color(0xFF64748B),
+              right: 8,
+              child: Material(
+                color: const Color(0xFF225FEC),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () {
+                    if (_featuresController.text.trim().isNotEmpty) {
+                      setState(() {
+                        _featuresList.add(_featuresController.text.trim());
+                        _featuresController.clear();
+                        _notifyDataChanged();
+                      });
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  if (_featuresController.text.trim().isNotEmpty) {
-                    setState(() {
-                      _featuresList.add(_featuresController.text.trim());
-                      _featuresController.clear();
-                      _notifyDataChanged();
-                    });
-                  }
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
               ),
             ),
           ],
@@ -574,26 +582,34 @@ class _AddProductStep4ScreenState extends State<AddProductStep4Screen> {
               ),
             ),
             Positioned(
-              right: 12,
-              child: IconButton(
-                icon: Icon(
-                  LucideIcons.chevronRight,
-                  size: 20,
-                  color: isDark
-                      ? const Color(0xFF71717A)
-                      : const Color(0xFF64748B),
+              right: 8,
+              child: Material(
+                color: const Color(0xFF225FEC),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () {
+                    if (_storageInstructionsController.text.trim().isNotEmpty) {
+                      setState(() {
+                        _storageList.add(_storageInstructionsController.text.trim());
+                        _storageInstructionsController.clear();
+                        _notifyDataChanged();
+                      });
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  if (_storageInstructionsController.text.trim().isNotEmpty) {
-                    setState(() {
-                      _storageList.add(_storageInstructionsController.text.trim());
-                      _storageInstructionsController.clear();
-                      _notifyDataChanged();
-                    });
-                  }
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
               ),
             ),
           ],
@@ -736,26 +752,34 @@ class _AddProductStep4ScreenState extends State<AddProductStep4Screen> {
               ),
             ),
             Positioned(
-              right: 12,
-              child: IconButton(
-                icon: Icon(
-                  LucideIcons.chevronRight,
-                  size: 20,
-                  color: isDark
-                      ? const Color(0xFF71717A)
-                      : const Color(0xFF64748B),
+              right: 8,
+              child: Material(
+                color: const Color(0xFF225FEC),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () {
+                    if (_allergensController.text.trim().isNotEmpty) {
+                      setState(() {
+                        _allergensList.add(_allergensController.text.trim());
+                        _allergensController.clear();
+                        _notifyDataChanged();
+                      });
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  if (_allergensController.text.trim().isNotEmpty) {
-                    setState(() {
-                      _allergensList.add(_allergensController.text.trim());
-                      _allergensController.clear();
-                      _notifyDataChanged();
-                    });
-                  }
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
               ),
             ),
           ],

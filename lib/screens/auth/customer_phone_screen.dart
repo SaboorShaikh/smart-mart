@@ -44,7 +44,7 @@ class _CustomerPhoneScreenState extends State<CustomerPhoneScreen> {
                   SizedBox(
                     width: 100,
                     child: DropdownButtonFormField<String>(
-                      value: _code,
+                      initialValue: _code,
                       items: _countryCodes
                           .map(
                               (c) => DropdownMenuItem(value: c, child: Text(c)))

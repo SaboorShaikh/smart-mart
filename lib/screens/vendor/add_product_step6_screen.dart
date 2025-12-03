@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:get/get.dart';
-import '../../widgets/custom_input.dart';
 
 class AddProductStep6Screen extends StatefulWidget {
   final List<String> tags;
@@ -26,7 +25,11 @@ class _AddProductStep6ScreenState extends State<AddProductStep6Screen> {
   @override
   void initState() {
     super.initState();
-    _tags.addAll(widget.tags);
+    _tagController.text = '';
+    // Populate tags list from widget
+    if (widget.tags.isNotEmpty) {
+      _tags.addAll(widget.tags);
+    }
   }
 
   @override
@@ -203,47 +206,24 @@ class _AddProductStep6ScreenState extends State<AddProductStep6Screen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 8),
-                    // Tag Input
-                    _buildTagInputSection(theme),
-                    const SizedBox(height: 24),
-
-                    // Quick Add Tags
-                    _buildQuickAddSection(theme),
-                    const SizedBox(height: 24),
-
-                    // Tags Display
-                    if (_tags.isNotEmpty) ...[
-                      _buildTagsDisplaySection(theme),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Help text
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color:
-                            theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            LucideIcons.info,
-                            size: 16,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Tags help customers discover your product through search and filtering.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
+                    // Subtitle/Instructions
+                    Text(
+                      'Add searchable tags to improve product visibility.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                        color: isDark
+                            ? const Color(0xFFA1A1AA)
+                            : const Color(0xFF71717A),
+                        height: 1.5,
                       ),
                     ),
+                    const SizedBox(height: 32),
+                    // Add Tags Section
+                    _buildAddTagsSection(theme, isDark),
+                    const SizedBox(height: 32),
+                    // Quick Add Common Tags Section
+                    _buildQuickAddSection(theme, isDark),
                     const SizedBox(height: 100), // Space for fixed bottom button
                   ],
                 ),
@@ -255,93 +235,208 @@ class _AddProductStep6ScreenState extends State<AddProductStep6Screen> {
     );
   }
 
-  Widget _buildTagInputSection(ThemeData theme) {
+  Widget _buildAddTagsSection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Add Product Tags',
+          'Add Tags',
           style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: 16,
             fontWeight: FontWeight.w600,
+            color: isDark ? const Color(0xFFD4D4D8) : const Color(0xFF18181B),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Enter tags separated by commas or press Enter to add individual tags',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 12),
-        CustomInput(
-          value: _tagController.text,
-          label: 'Product Tags',
-          hint: 'e.g., organic, fresh, local, premium',
-          prefixIcon: Icon(LucideIcons.hash),
-          onChanged: (value) {
-            _tagController.text = value;
-          },
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) {
-              _addTag(value.trim());
-            }
-          },
-          textInputAction: TextInputAction.done,
-        ),
-        const SizedBox(height: 12),
-        Row(
+        const SizedBox(height: 16),
+        // Input field with circular button
+        Stack(
+          alignment: Alignment.centerRight,
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  final text = _tagController.text.trim();
-                  if (text.isNotEmpty) {
-                    _addTag(text);
+            TextField(
+              controller: _tagController,
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty) {
+                  final tag = value.trim();
+                  if (!_tags.any((t) => t.toLowerCase() == tag.toLowerCase())) {
+                    setState(() {
+                      _tags.add(tag);
+                      _tagController.clear();
+                      widget.onDataChanged(_tags);
+                    });
                   }
-                },
-                icon: const Icon(LucideIcons.plus, size: 16),
-                label: const Text('Add Tag'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: () {
-                final text = _tagController.text.trim();
-                if (text.isNotEmpty) {
-                  _addMultipleTags(text);
                 }
               },
-              icon: const Icon(LucideIcons.list, size: 16),
-              label: const Text('Add All'),
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.white : const Color(0xFF18181B),
+              ),
+              decoration: InputDecoration(
+                hintText: 'e.g., organic, fresh, handmade...',
+                hintStyle: TextStyle(
+                  fontSize: 16,
+                  color: isDark
+                      ? const Color(0xFF71717A)
+                      : const Color(0xFFA1A1AA),
+                ),
+                filled: true,
+                fillColor: isDark
+                    ? const Color(0xFF1E293B)
+                    : Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFCBD5E1),
+                    width: 1,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFCBD5E1),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF225FEC),
+                    width: 1,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+              ),
+            ),
+            Positioned(
+              right: 8,
+              child: Material(
+                color: const Color(0xFF225FEC),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () {
+                    if (_tagController.text.trim().isNotEmpty) {
+                      final tag = _tagController.text.trim();
+                      if (!_tags.any((t) => t.toLowerCase() == tag.toLowerCase())) {
+                        setState(() {
+                          _tags.add(tag);
+                          _tagController.clear();
+                          widget.onDataChanged(_tags);
+                        });
+                      }
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        // Dashed border container with white background showing added tags
+        SizedBox(
+          width: double.infinity,
+          height: 96,
+          child: CustomPaint(
+            painter: DashedBorderPainter(
+              color: isDark
+                  ? const Color(0xFF1E293B)
+                  : const Color(0xFF94A3B8),
+              strokeWidth: 1.5,
+              gap: 4,
+              dash: 6,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: _tags.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Added tags will appear here',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark
+                              ? const Color(0xFF71717A)
+                              : const Color(0xFFA1A1AA),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    )
+                  : Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: _tags.map((tag) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF225FEC).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(9999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                tag,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF225FEC),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _tags.remove(tag);
+                                    widget.onDataChanged(_tags);
+                                  });
+                                },
+                                child: Icon(
+                                  LucideIcons.x,
+                                  size: 16,
+                                  color: const Color(0xFF225FEC),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildQuickAddSection(ThemeData theme) {
+  Widget _buildQuickAddSection(ThemeData theme, bool isDark) {
     final commonTags = [
-      'organic',
-      'fresh',
-      'local',
-      'premium',
-      'healthy',
-      'natural',
-      'farm-fresh',
-      'seasonal',
-      'artisanal',
-      'sustainable',
-      'gluten-free',
-      'dairy-free',
-      'vegan',
-      'vegetarian',
-      'low-sugar',
-      'high-protein',
-      'low-fat',
-      'no-preservatives',
-      'handpicked',
-      'quality-assured',
+      'Handmade',
+      'Eco-Friendly',
+      'Local',
+      'Artisanal',
     ];
 
     return Column(
@@ -350,88 +445,50 @@ class _AddProductStep6ScreenState extends State<AddProductStep6Screen> {
         Text(
           'Quick Add Common Tags',
           style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: 16,
             fontWeight: FontWeight.w600,
+            color: isDark ? const Color(0xFFD4D4D8) : const Color(0xFF18181B),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Tap to add popular tags',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: commonTags.map((tag) {
-            final isSelected = _tags.contains(tag);
-            return FilterChip(
-              label: Text(tag),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  _addTag(tag);
-                } else {
-                  _removeTag(tag);
+            return OutlinedButton(
+              onPressed: () {
+                if (!_tags.any((t) => t.toLowerCase() == tag.toLowerCase())) {
+                  setState(() {
+                    _tags.add(tag);
+                    widget.onDataChanged(_tags);
+                  });
                 }
               },
-              backgroundColor:
-                  theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-              selectedColor: theme.colorScheme.primary.withOpacity(0.2),
-              checkmarkColor: theme.colorScheme.primary,
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9999),
+                ),
+                side: BorderSide(
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFCBD5E1),
+                  width: 1,
+                ),
+                backgroundColor: isDark
+                    ? const Color(0xFF1E293B)
+                    : Colors.white,
               ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTagsDisplaySection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Current Tags (${_tags.length})',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (_tags.isNotEmpty)
-              TextButton.icon(
-                onPressed: _clearAllTags,
-                icon: const Icon(LucideIcons.trash2, size: 16),
-                label: const Text('Clear All'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red,
+              child: Text(
+                tag,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isDark
+                      ? const Color(0xFFD4D4D8)
+                      : const Color(0xFF374151),
                 ),
               ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _tags.map((tag) {
-            return Chip(
-              label: Text(tag),
-              onDeleted: () => _removeTag(tag),
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-              deleteIconColor: theme.colorScheme.primary,
-              labelStyle: TextStyle(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
             );
           }).toList(),
         ),
@@ -439,85 +496,165 @@ class _AddProductStep6ScreenState extends State<AddProductStep6Screen> {
     );
   }
 
-  void _addTag(String tag) {
-    if (tag.isNotEmpty && !_tags.contains(tag.toLowerCase())) {
-      setState(() {
-        _tags.add(tag.toLowerCase());
-      });
-      _tagController.clear();
-      widget.onDataChanged(_tags);
+}
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tag "$tag" added successfully!'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    } else if (tag.isNotEmpty && _tags.contains(tag.toLowerCase())) {
-      // Show message if tag already exists
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tag "$tag" already exists!'),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
+// Custom painter for dashed border
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double dash;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 2.0,
+    this.gap = 4.0,
+    this.dash = 6.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final radius = 12.0;
+
+    // Top border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(radius, 0),
+      Offset(size.width - radius, 0),
+    );
+
+    // Top-right corner
+    _drawDashedArc(
+      canvas,
+      paint,
+      Offset(size.width - radius, radius),
+      radius,
+      -90 * (3.14159 / 180),
+      90 * (3.14159 / 180),
+    );
+
+    // Right border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(size.width, radius),
+      Offset(size.width, size.height - radius),
+    );
+
+    // Bottom-right corner
+    _drawDashedArc(
+      canvas,
+      paint,
+      Offset(size.width - radius, size.height - radius),
+      radius,
+      0,
+      90 * (3.14159 / 180),
+    );
+
+    // Bottom border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(size.width - radius, size.height),
+      Offset(radius, size.height),
+    );
+
+    // Bottom-left corner
+    _drawDashedArc(
+      canvas,
+      paint,
+      Offset(radius, size.height - radius),
+      radius,
+      90 * (3.14159 / 180),
+      90 * (3.14159 / 180),
+    );
+
+    // Left border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(0, size.height - radius),
+      Offset(0, radius),
+    );
+
+    // Top-left corner
+    _drawDashedArc(
+      canvas,
+      paint,
+      Offset(radius, radius),
+      radius,
+      180 * (3.14159 / 180),
+      90 * (3.14159 / 180),
+    );
   }
 
-  void _addMultipleTags(String text) {
-    final tags = text
-        .split(',')
-        .map((tag) => tag.trim())
-        .where((tag) => tag.isNotEmpty)
-        .toList();
+  void _drawDashedLine(Canvas canvas, Paint paint, Offset start, Offset end) {
+    final path = Path();
+    final distance = (end - start).distance;
+    final dashLength = dash;
+    final gapLength = gap;
 
-    int addedCount = 0;
-    for (final tag in tags) {
-      if (!_tags.contains(tag.toLowerCase())) {
-        _tags.add(tag.toLowerCase());
-        addedCount++;
+    double currentDistance = 0;
+    bool draw = true;
+
+    while (currentDistance < distance) {
+      final remaining = distance - currentDistance;
+      final segmentLength = draw
+          ? (remaining < dashLength ? remaining : dashLength)
+          : (remaining < gapLength ? remaining : gapLength);
+
+      if (draw) {
+        final t1 = currentDistance / distance;
+        final t2 = (currentDistance + segmentLength) / distance;
+        final p1 = Offset.lerp(start, end, t1)!;
+        final p2 = Offset.lerp(start, end, t2)!;
+        path.moveTo(p1.dx, p1.dy);
+        path.lineTo(p2.dx, p2.dy);
       }
+
+      currentDistance += segmentLength;
+      draw = !draw;
     }
 
-    setState(() {});
-    _tagController.clear();
-    widget.onDataChanged(_tags);
+    canvas.drawPath(path, paint);
+  }
 
-    // Show success message
-    if (addedCount > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              '$addedCount tag${addedCount > 1 ? 's' : ''} added successfully!'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('All tags already exist!'),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 2),
-        ),
+  void _drawDashedArc(Canvas canvas, Paint paint, Offset center, double radius,
+      double startAngle, double sweepAngle) {
+    final path = Path();
+    final circumference = radius * sweepAngle;
+    final dashLength = dash;
+    final gapLength = gap;
+    final totalLength = dashLength + gapLength;
+    final numDashes = (circumference / totalLength).ceil();
+
+    for (int i = 0; i < numDashes; i++) {
+      final dashStart = startAngle + (i * totalLength / radius);
+      final dashEnd = dashStart + (dashLength / radius);
+      if (dashEnd > startAngle + sweepAngle) {
+        path.addArc(
+          Rect.fromCircle(center: center, radius: radius),
+          dashStart,
+          (startAngle + sweepAngle) - dashStart,
+        );
+        break;
+      }
+      path.addArc(
+        Rect.fromCircle(center: center, radius: radius),
+        dashStart,
+        dashLength / radius,
       );
     }
+
+    canvas.drawPath(path, paint);
   }
 
-  void _removeTag(String tag) {
-    setState(() {
-      _tags.remove(tag);
-    });
-    widget.onDataChanged(_tags);
-  }
-
-  void _clearAllTags() {
-    setState(() {
-      _tags.clear();
-    });
-    widget.onDataChanged(_tags);
-  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

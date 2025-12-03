@@ -409,7 +409,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Widget _buildCategoryDropdown(ThemeData theme) {
     return DropdownButtonFormField<String>(
-      value: _selectedCategory,
+      initialValue: _selectedCategory,
       decoration: InputDecoration(
         labelText: 'Category *',
         border: OutlineInputBorder(
