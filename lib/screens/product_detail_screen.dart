@@ -1072,7 +1072,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -1136,7 +1136,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white : const Color(0xFF18181B),
+              color: isDark ? const Color(0xFFD4D4D8) : const Color(0xFF18181B),
             ),
           ),
         ],
@@ -1156,7 +1156,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -1218,7 +1218,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
