@@ -208,6 +208,11 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
               _stockQuantity = stock;
             });
           },
+          onStartOver: () {
+            setState(() {
+              _currentStep = 0;
+            });
+          },
         ),
         AddProductStep3Screen(
           brand: _brand,
@@ -224,6 +229,11 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
               _manufacturer = manufacturer;
             });
           },
+          onStartOver: () {
+            setState(() {
+              _currentStep = 0;
+            });
+          },
         ),
         AddProductStep4Screen(
           detailedDescription: _detailedDescription,
@@ -238,12 +248,22 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
               _allergens = allergens;
             });
           },
+          onStartOver: () {
+            setState(() {
+              _currentStep = 0;
+            });
+          },
         ),
         AddProductStep5Screen(
           nutritionInfo: _nutritionInfo,
           onDataChanged: (nutrition) {
             setState(() {
               _nutritionInfo = nutrition;
+            });
+          },
+          onStartOver: () {
+            setState(() {
+              _currentStep = 0;
             });
           },
         ),
@@ -254,161 +274,13 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
               _tags = tags;
             });
           },
+          onStartOver: () {
+            setState(() {
+              _currentStep = 0;
+            });
+          },
         ),
       ];
-
-  Widget _buildProgressIndicator(ThemeData theme, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        children: [
-          // Progress Bar Section
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Stage ${_currentStep + 1} of 6',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? const Color(0xFFD4D4D8)
-                      : const Color(0xFF333333),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(9999),
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: FractionallySizedBox(
-                    widthFactor: (_currentStep + 1) / 6,
-                    child: Container(
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF225FEC),
-                        borderRadius: BorderRadius.circular(9999),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getStageTitle() {
-    switch (_currentStep) {
-      case 2:
-        return 'Product Details';
-      case 3:
-        return 'Detailed Information';
-      case 4:
-        return 'Nutrition Information';
-      case 5:
-        return 'Product Tags';
-      default:
-        return '';
-    }
-  }
-
-  Widget _buildStepHeader(ThemeData theme, bool isDark) {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        child: Row(
-          children: [
-            // Back button
-            IconButton(
-              icon: Icon(
-                LucideIcons.arrowLeft,
-                color: isDark ? Colors.white : const Color(0xFF18181B),
-              ),
-              onPressed: () => Get.back(),
-            ),
-            // Dots centered
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(6, (index) {
-                  final isActive = index <= _currentStep;
-                  final isCurrent = index == _currentStep;
-                  return Container(
-                    width: isCurrent ? 12 : 8,
-                    height: isCurrent ? 12 : 8,
-                    margin: EdgeInsets.only(
-                      right: index < 5 ? 12 : 0,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? const Color(0xFF225FEC)
-                          : (isDark
-                              ? const Color(0xFF3F3F46)
-                              : const Color(0xFFD4D4D8)),
-                      shape: BoxShape.circle,
-                      boxShadow: isCurrent
-                          ? [
-                              BoxShadow(
-                                color:
-                                    const Color(0xFF225FEC).withOpacity(0.2),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ]
-                          : null,
-                    ),
-                  );
-                }),
-              ),
-            ),
-            // Start Over / Save actions
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_currentStep > 0)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _currentStep = 0;
-                      });
-                    },
-                    child: Text(
-                      'Start Over',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                if (_currentStep == 5)
-                  TextButton(
-                    onPressed: _isLoading ? null : _saveProduct,
-                    child: Text(
-                      _isEditMode ? 'Update' : 'Save',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -464,27 +336,7 @@ class _AddProductStepperScreenState extends State<AddProductStepperScreen> {
               children: [
                 Column(
                   children: [
-                    if (_currentStep > 1) _buildStepHeader(theme, isDark),
-                    if (_currentStep > 1)
-                      Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _getStageTitle(),
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (_currentStep > 1)
-                      const SizedBox(height: 8),
-                    if (_currentStep > 1)
-                      _buildProgressIndicator(theme, isDark),
-                    // Current step content
+                    // Current step content (stages 2-6 have their own headers)
                     Expanded(
                       child: _steps[_currentStep],
                     ),

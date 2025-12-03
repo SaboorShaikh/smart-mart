@@ -61,6 +61,10 @@ class AppIcons {
   static const String camera = 'assets/icons/camera.png';
   static const String productUnit = 'assets/icons/product_unit.png';
   static const String stockQuantity = 'assets/icons/stock_quantity.png';
+  static const String brandName = 'assets/icons/brand_name.png';
+  static const String date = 'assets/icons/date.png';
+  static const String manufacturer = 'assets/icons/manufacturer.png';
+  static const String origin = 'assets/icons/origin.png';
 
   // Menu icons
   static const String help = 'assets/icons/help.png';

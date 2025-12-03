@@ -90,6 +90,10 @@ flutter:
     - assets/icons/add_image.png
     - assets/icons/product_unit.png
     - assets/icons/stock_quantity.png
+    - assets/icons/brand_name.png
+    - assets/icons/date.png
+    - assets/icons/manufacturer.png
+    - assets/icons/origin.png
     - assets/icons/store settings.png
     - assets/icons/analytics.png
     - assets/icons/shop_smart.png

@@ -11,6 +11,7 @@ class AddProductStep2Screen extends StatefulWidget {
   final String stockQuantity;
   final List<String> categories;
   final Function(String, String, String, String) onDataChanged;
+  final VoidCallback? onStartOver;
 
   const AddProductStep2Screen({
     super.key,
@@ -20,6 +21,7 @@ class AddProductStep2Screen extends StatefulWidget {
     required this.stockQuantity,
     required this.categories,
     required this.onDataChanged,
+    this.onStartOver,
   });
 
   @override
@@ -132,8 +134,20 @@ class _AddProductStep2ScreenState extends State<AddProductStep2Screen> {
                         }),
                       ),
                     ),
-                    // Spacer
-                    const SizedBox(width: 40),
+                    // Start Over button
+                    if (widget.onStartOver != null)
+                      TextButton(
+                        onPressed: widget.onStartOver,
+                        child: Text(
+                          'Start Over',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 40),
                   ],
                 ),
                 const SizedBox(height: 8),
