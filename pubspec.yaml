@@ -88,6 +88,7 @@ flutter:
     - assets/icons/average_order_value.png
     - assets/icons/camera.png
     - assets/icons/add_image.png
+    - assets/icons/check.png
     - assets/icons/product_unit.png
     - assets/icons/stock_quantity.png
     - assets/icons/brand_name.png

@@ -53,7 +53,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   @override
   void initState() {
     super.initState();
-    _imagePageController = PageController(viewportFraction: 0.85);
+    // Full-width pages so only one image is visible at a time
+    _imagePageController = PageController(viewportFraction: 1.0);
 
     // Initialize blur animation controller
     _blurController = AnimationController(
@@ -442,42 +443,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              padding: const EdgeInsets.fromLTRB(0, 12, 0, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Edge-to-edge carousel
                   _buildMediaSection(product, theme),
                   const SizedBox(height: 24),
-                  _buildSummarySection(
-                    product,
-                    theme,
-                    primaryPrice,
-                    hasDiscount,
-                    userRating: _userRating,
-                    onRatingSelected: ratingHandler,
-                  ),
-                  const SizedBox(height: 24),
-                  // Additional Product Information
-                  _buildAdditionalInfoSection(product, theme, isDark),
-                  const SizedBox(height: 16),
-                  // Description
-                  _buildDescriptionCard(product, theme, isDark),
-                  const SizedBox(height: 16),
-                  // Key Features
-                  if (product.features != null && product.features!.isNotEmpty)
-                    _buildKeyFeaturesSection(product, theme, isDark),
-                  if (product.features != null && product.features!.isNotEmpty)
-                    const SizedBox(height: 16),
-                  // Nutrition Information
-                  if (product.nutritionInfo != null &&
-                      product.nutritionInfo!.isNotEmpty)
+                  // Rest of content with horizontal padding
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSummarySection(
+                          product,
+                          theme,
+                          primaryPrice,
+                          hasDiscount,
+                          userRating: _userRating,
+                          onRatingSelected: ratingHandler,
+                        ),
+                        const SizedBox(height: 24),
+                        // Additional Product Information
+                        _buildAdditionalInfoSection(product, theme, isDark),
+                        const SizedBox(height: 16),
+                        // Description
+                        _buildDescriptionCard(product, theme, isDark),
+                        const SizedBox(height: 16),
+                        // Key Features (always show container)
+                        _buildKeyFeaturesSection(product, theme, isDark),
+                        const SizedBox(height: 16),
+                    // Nutrition Information (always show container)
                     _buildNutritionInfoSection(product, theme, isDark),
-                  if (product.nutritionInfo != null &&
-                      product.nutritionInfo!.isNotEmpty)
                     const SizedBox(height: 16),
-                  // Seller Information
-                  _buildVendorCard(vendor, theme, isDark),
-                  const SizedBox(height: 120),
+                    // Allergy Information (always show container)
+                    _buildAllergiesSection(product, theme, isDark),
+                    const SizedBox(height: 16),
+                    // Seller Information
+                    _buildVendorCard(vendor, theme, isDark),
+                        const SizedBox(height: 120),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -827,58 +835,78 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   Widget _buildMediaSection(Product product, ThemeData theme) {
     final images = product.images;
 
-    final height = MediaQuery.of(context).size.width * 0.77;
+    // Keep existing height calculation
+    final height = MediaQuery.of(context).size.width * 0.75;
 
-    return Column(
-      children: [
-        SizedBox(
-          height: height,
-          child: PageView.builder(
-            controller: _imagePageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentImageIndex = index;
-              });
-            },
-            clipBehavior: Clip.none,
-            itemCount: images.isNotEmpty ? images.length : 1,
-            itemBuilder: (context, index) {
-              return AnimatedPadding(
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                padding: EdgeInsets.symmetric(
-                  horizontal: index == _currentImageIndex ? 6 : 14,
-                ),
-                child: _buildImageCard(
-                  theme: theme,
-                  imageUrl: images.isNotEmpty ? images[index] : null,
-                ),
-              );
-            },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: height,
+            child: PageView.builder(
+              controller: _imagePageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentImageIndex = index;
+                });
+              },
+              itemCount: images.isNotEmpty ? images.length : 1,
+              itemBuilder: (context, index) {
+                return AnimatedBuilder(
+                  animation: _imagePageController,
+                  child: _buildImageCard(
+                    theme: theme,
+                    imageUrl: images.isNotEmpty ? images[index] : null,
+                  ),
+                  builder: (context, child) {
+                    double page = 0;
+                    if (_imagePageController.hasClients &&
+                        _imagePageController.position.haveDimensions) {
+                      page = _imagePageController.page ??
+                          _imagePageController.initialPage.toDouble();
+                    }
+                    final distance = (index - page).abs();
+                    // Scale and subtle vertical translate for interactive feel
+                    final scale = (1 - (0.08 * distance)).clamp(0.9, 1.0);
+                    final dy = 6 * distance;
+
+                    return Transform.translate(
+                      offset: Offset(0, dy),
+                      child: Transform.scale(
+                        scale: scale,
+                        child: child,
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
-        ),
-        if (images.length > 1) ...[
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              images.length,
-              (index) => AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                height: 6,
-                width: index == _currentImageIndex ? 16 : 6,
-                decoration: BoxDecoration(
-                  color: index == _currentImageIndex
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.primary.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
+          if (images.length > 1) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                images.length,
+                (index) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  height: 6,
+                  width: index == _currentImageIndex ? 16 : 6,
+                  decoration: BoxDecoration(
+                    color: index == _currentImageIndex
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primary.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -892,114 +920,129 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   }) {
     final rating = userRating ?? product.rating ?? 0.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                product.category,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  product.category,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildStarRating(
-                  rating,
-                  theme,
-                  userRating: userRating,
-                  onRatingSelected: onRatingSelected,
-                  iconSize: 22,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${rating.toStringAsFixed(1)} / 5',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildStarRating(
+                    rating,
+                    theme,
+                    userRating: userRating,
+                    onRatingSelected: onRatingSelected,
+                    iconSize: 20,
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          _capitalize(product.name),
-          style: theme.textTheme.displaySmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            height: 1.1,
+                  const SizedBox(height: 4),
+                  Text(
+                    '${rating.toStringAsFixed(1)} / 5',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (hasDiscount) ...[
+          const SizedBox(height: 6),
+          Text(
+            _capitalize(product.name),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasDiscount) ...[
+                Row(
+                  children: [
+                    Text(
+                      '₨${product.originalPrice.toStringAsFixed(2)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        decoration: TextDecoration.lineThrough,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEEF0),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        product.discountBadgeText,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: const Color(0xFFFB7185),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+              ],
               Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '₨${product.originalPrice.toStringAsFixed(2)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      decoration: TextDecoration.lineThrough,
-                      fontWeight: FontWeight.w500,
+                    '₨${primaryPrice.toStringAsFixed(2)}',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  const SizedBox(width: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
                     child: Text(
-                      product.discountBadgeText,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
+                      '/${product.unit}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
             ],
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '₨${primaryPrice.toStringAsFixed(2)}',
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    '/${product.unit}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1069,7 +1112,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
 
   Widget _buildAdditionalInfoSection(
       Product product, ThemeData theme, bool isDark) {
+    final hasExpiry =
+        product.expiryDate != null && product.expiryDate!.trim().isNotEmpty;
+    final expiryText =
+        hasExpiry ? product.expiryDate!.trim() : 'No expiry specified';
+
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -1092,26 +1141,97 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
               color: isDark ? Colors.white : const Color(0xFF18181B),
             ),
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              if (product.unit.isNotEmpty)
-                _buildInfoItem('Measurement', product.unit, theme, isDark),
-              if (product.brand != null && product.brand!.isNotEmpty)
-                _buildInfoItem('Brand Name', product.brand!, theme, isDark),
-              if (product.origin != null && product.origin!.isNotEmpty)
-                _buildInfoItem('Origin', product.origin!, theme, isDark),
-              if (product.expiryDate != null && product.expiryDate!.isNotEmpty)
-                _buildInfoItem(
-                    'Expiry Date', product.expiryDate!, theme, isDark),
-              if (product.manufacturer != null &&
-                  product.manufacturer!.isNotEmpty)
-                _buildInfoItem(
-                    'Manufacturer', product.manufacturer!, theme, isDark),
-            ],
+          const SizedBox(height: 12),
+          Divider(
+            color: isDark
+                ? const Color(0xFF1F2933)
+                : const Color(0xFFE5E7EB),
+            thickness: 1,
+            height: 1,
           ),
+          const SizedBox(height: 12),
+          if (product.unit.isNotEmpty ||
+              (product.brand != null && product.brand!.isNotEmpty) ||
+              (product.origin != null && product.origin!.isNotEmpty) ||
+              (product.manufacturer != null &&
+                  product.manufacturer!.isNotEmpty))
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Row 1: Measurement & Brand Name
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (product.unit.isNotEmpty)
+                      Expanded(
+                        child: _buildInfoItem(
+                            'Measurement', product.unit, theme, isDark),
+                      ),
+                    if (product.brand != null && product.brand!.isNotEmpty)
+                      Expanded(
+                        child: _buildInfoItem(
+                            'Brand Name', product.brand!, theme, isDark),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Divider(
+                  color: isDark
+                      ? const Color(0xFF1F2933)
+                      : const Color(0xFFE5E7EB),
+                  thickness: 1,
+                  height: 1,
+                ),
+                const SizedBox(height: 12),
+                // Row 2: Origin & Expiry Date (or non-expiring text)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (product.origin != null &&
+                        product.origin!.isNotEmpty)
+                      Expanded(
+                        child: _buildInfoItem(
+                            'Origin', product.origin!, theme, isDark),
+                      ),
+                    Expanded(
+                      child: _buildInfoItem(
+                          'Expiry Date', expiryText, theme, isDark),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Divider(
+                  color: isDark
+                      ? const Color(0xFF1F2933)
+                      : const Color(0xFFE5E7EB),
+                  thickness: 1,
+                  height: 1,
+                ),
+                const SizedBox(height: 12),
+                // Row 3: Manufacturer (full width)
+                if (product.manufacturer != null &&
+                    product.manufacturer!.isNotEmpty)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _buildInfoItem('Manufacturer',
+                            product.manufacturer!, theme, isDark),
+                      ),
+                    ],
+                  ),
+              ],
+            )
+          else
+            Text(
+              'No additional product details have been provided for this item.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? const Color(0xFFA1A1AA)
+                    : const Color(0xFF6B7280),
+                height: 1.5,
+              ),
+            ),
         ],
       ),
     );
@@ -1145,15 +1265,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   }
 
   Widget _buildDescriptionCard(Product product, ThemeData theme, bool isDark) {
-    final description = product.detailedDescription ?? product.description;
-    final isLong = description.length > 220;
-
-    String displayText = description;
-    if (!_isDescriptionExpanded && isLong) {
-      displayText = '${description.substring(0, 220).trim()}...';
-    }
+    // Always show the short description that was saved when adding the product
+    final shortDescription = product.description;
+    final isLong = shortDescription.length > 140;
 
     return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 150),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -1168,6 +1286,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             'Description',
@@ -1178,34 +1297,171 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            displayText,
+            shortDescription,
             style: theme.textTheme.bodyMedium?.copyWith(
               height: 1.6,
               color: isDark ? const Color(0xFFD4D4D8) : const Color(0xFF71717A),
+              overflow: TextOverflow.ellipsis,
             ),
+            maxLines: 3,
           ),
-          if (isLong)
-            TextButton(
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: TextButton(
               onPressed: () {
-                setState(() {
-                  _isDescriptionExpanded = !_isDescriptionExpanded;
-                });
+                _showDescriptionDialog(product, theme, isDark);
               },
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text(
-                _isDescriptionExpanded ? 'Show less' : 'View Details',
+              child: const Text(
+                'View Details',
                 style: TextStyle(
-                  color: const Color(0xFF225FEC),
+                  color: Color(0xFF225FEC),
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
               ),
             ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showDescriptionDialog(
+      Product product, ThemeData theme, bool isDark) {
+    // In the popup, prefer detailed description, fall back to short if needed
+    final description =
+        (product.detailedDescription != null &&
+                product.detailedDescription!.trim().isNotEmpty)
+            ? product.detailedDescription!.trim()
+            : product.description;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Product description',
+      barrierColor: Colors.black.withOpacity(0.25),
+      transitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        // Actual UI is built in transitionBuilder
+        return const SizedBox.shrink();
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved =
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+
+        return GestureDetector(
+          onTap: () => Navigator.of(context).maybePop(),
+          child: Stack(
+            children: [
+              // Blurred background
+              BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: 10 * curved.value,
+                  sigmaY: 10 * curved.value,
+                ),
+                child: Container(
+                  color: Colors.black.withOpacity(0.25 * curved.value),
+                ),
+              ),
+              // Centered scaling dialog
+              Center(
+                child: ScaleTransition(
+                  scale:
+                      Tween<double>(begin: 0.9, end: 1.0).animate(curved),
+                  child: GestureDetector(
+                    onTap: () {}, // absorb taps inside dialog
+                    child: _buildDescriptionDialogCard(
+                      description,
+                      theme,
+                      isDark,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDescriptionDialogCard(
+      String description, ThemeData theme, bool isDark) {
+    final maxHeight = MediaQuery.of(context).size.height * 0.7;
+    final maxWidth = MediaQuery.of(context).size.width * 0.9;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: maxHeight,
+        maxWidth: maxWidth,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Product Description',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF111827),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: Icon(
+                    LucideIcons.x,
+                    size: 20,
+                    color:
+                        isDark ? const Color(0xFFE5E7EB) : const Color(0xFF6B7280),
+                  ),
+                  splashRadius: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Divider(
+              color: isDark
+                  ? const Color(0xFF1F2933)
+                  : const Color(0xFFE5E7EB),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Text(
+                  description,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.6,
+                    color: isDark
+                        ? const Color(0xFFD4D4D8)
+                        : const Color(0xFF4B5563),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1213,7 +1469,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   Widget _buildKeyFeaturesSection(
       Product product, ThemeData theme, bool isDark) {
     final features = product.features ?? [];
-    if (features.isEmpty) return const SizedBox.shrink();
+    final hasFeatures = features.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1239,31 +1495,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
             ),
           ),
           const SizedBox(height: 16),
-          ...features.map((feature) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      LucideIcons.checkCircle,
-                      size: 20,
-                      color: const Color(0xFF225FEC),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        feature,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isDark
-                              ? const Color(0xFFD4D4D8)
-                              : const Color(0xFF18181B),
-                          height: 1.5,
+          if (hasFeatures)
+            ...features.map((feature) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        margin: const EdgeInsets.only(top: 2),
+                        child: Image.asset(
+                          'assets/icons/check.png',
+                          fit: BoxFit.contain,
+                          color: theme.colorScheme.primary,
+                          colorBlendMode: BlendMode.srcIn,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              )),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          feature,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isDark
+                                ? const Color(0xFFD4D4D8)
+                                : const Color(0xFF18181B),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ))
+          else
+            Text(
+              'Key feature details are not available for this product.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? const Color(0xFFA1A1AA)
+                    : const Color(0xFF6B7280),
+                height: 1.5,
+              ),
+            ),
         ],
       ),
     );
@@ -1272,10 +1545,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   Widget _buildNutritionInfoSection(
       Product product, ThemeData theme, bool isDark) {
     final nutrition = product.nutritionInfo;
-    if (nutrition == null || nutrition.isEmpty) return const SizedBox.shrink();
-
-    // Extract nutrition tags from the map
-    final nutritionTags = nutrition.keys.toList();
+    final nutritionTags =
+        nutrition != null ? nutrition.keys.toList() : <String>[];
+    final hasTags = nutritionTags.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1301,36 +1573,123 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
             ),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: nutritionTags.map((tag) {
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFF4F5F7),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
+          if (hasTags)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: nutritionTags.map((tag) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
                     color: isDark
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFCBD5E1),
-                    width: 1,
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF4F5F7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFCBD5E1),
+                      width: 1,
+                    ),
                   ),
-                ),
-                child: Text(
-                  tag,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF225FEC),
+                  child: Text(
+                    tag,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF225FEC),
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            )
+          else
+            Text(
+              'No nutrition information has been provided for this product.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? const Color(0xFFA1A1AA)
+                    : const Color(0xFF6B7280),
+                height: 1.5,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAllergiesSection(
+      Product product, ThemeData theme, bool isDark) {
+    final allergens = product.allergens ?? [];
+    final hasAllergens = allergens.isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Allergy Information',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF18181B),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (hasAllergens)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: allergens.map((allergen) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFFFF7ED),
+                    borderRadius: BorderRadius.circular(9999),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFFFB923C)
+                          : const Color(0xFFF97316),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    allergen,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFF97316),
+                    ),
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            Text(
+              'No allergen information has been provided for this product.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark
+                    ? const Color(0xFFA1A1AA)
+                    : const Color(0xFF6B7280),
+                height: 1.5,
+              ),
+            ),
         ],
       ),
     );

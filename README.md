@@ -2,7 +2,7 @@
 
 > A comprehensive, production-ready marketplace application connecting local vendors with customers through an intuitive dual-role platform.
 
-**SmartMart** is a full-featured e-commerce solution built with Flutter, offering seamless experiences for both buyers and sellers. With advanced product management, real-time notifications, smart discount systems, and beautiful UI, SmartMart sets a new standard for local marketplace applications.
+**SmartMart** is a full-featured e-commerce solution built with Flutter, offering seamless experiences for both buyers and sellers. With advanced product management, real-time notifications, smart discount systems, and a carefully crafted modern UI, SmartMart sets a new standard for local marketplace applications.
 
 ## ✨ Highlights
 
@@ -19,8 +19,8 @@
 - 🌐 **Cloud-First**: Firebase & Supabase for scalable backend
 - ✨ **Shimmer Loading**: YouTube-style skeleton loading effects with right-to-left diagonal gradient
 - 🎬 **Smooth Animations**: Custom page transitions with blur effects and slide animations
-- 💼 **Vendor Product Management**: Context-aware buttons on product detail screen
-- 🌊 **Liquid Navbar**: Frosted glass navigation with animated liquid effects
+- 💼 **Vendor Product Management**: Context-aware buttons on product detail screen with role‑aware bottom actions
+- 🧭 **Floating Navbar**: Frosted glass bottom navigation with subtle depth and motion
 - 🔔 **Frosted Notifications**: Beautiful top-sliding notification banners with glassmorphism
 
 ## 🚀 Features
@@ -30,7 +30,10 @@
 - **📱 Product Detail Screen**: 
   - Beautiful shimmer loading effect while loading
   - Smooth slide-in/slide-out animations
-  - Vendor-specific actions when viewing own products
+  - Role-aware floating bottom bar:
+    - Update Product in review mode
+    - Quantity + Add to Cart for customers
+    - Add Discount / Edit Product for vendors viewing their own item
 - **🛒 Shopping Cart**: Add items to cart with quantity management and persistent storage
 - **📦 Order Management**: Track order history, status, and delivery updates in real-time
 - **👤 User Profile**: Manage personal information, preferences, and delivery addresses
@@ -99,13 +102,13 @@
 - **📍 GPS Integration**: Location detection and address geocoding
 - **🎨 Modern UI**: Material 3 design with custom animated components
 - **🪄 Smooth Animations**: Implicit transforms/opacity for scroll-based morph effects
-- **🧭 Floating Navigation Bar**: iOS-style navigation with smooth animations and liquid effects
+- **🧭 Floating Navigation Bar**: iOS-style navigation with smooth animations and frosted glass styling
 - **📱 Cross-Platform**: Native performance on Android and iOS
 - **💾 Smart Caching**: Optimized data loading with local storage fallback
 - **🔄 Pull-to-Refresh**: Manual data refresh on all list screens
 - **🎯 Haptic Feedback**: Touch feedback for better user experience
 - **✨ Shimmer Effects**: Skeleton loading animations for better perceived performance
-- **🌊 Liquid Animations**: Smooth liquid wave effects on navbar capsule and background
+- **🌊 Refined Animations**: Smooth, physics-based transitions on navbar capsule and active tab
 - **🔔 Frosted Glass UI**: Glassmorphism design with backdrop blur effects
 
 ## 🛠️ Technology Stack
