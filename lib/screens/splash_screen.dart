@@ -154,11 +154,12 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Shopping Bag Icon
-                          Icon(
-                            Icons.shopping_bag,
-                            size: 80,
-                            color: primaryBlue,
+                          // Logo Icon
+                          Image.asset(
+                            'assets/icons/logo_bg_removed.png',
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.contain,
                           ),
                           const SizedBox(height: 16),
                           // App Name

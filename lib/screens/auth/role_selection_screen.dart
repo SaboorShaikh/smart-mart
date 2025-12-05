@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../widgets/custom_button.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
@@ -18,14 +17,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
           child: Column(
             children: [
-              const SizedBox(height: 40),
-
               // Header
               Text(
                 'Choose Your Role',
@@ -38,13 +35,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               const SizedBox(height: 8),
 
               Text(
-                'Select how you want to use SmartMart',
+                'Select how you want to use the app',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
 
               // Role Cards
               Expanded(
@@ -54,12 +51,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     _buildRoleCard(
                       context,
                       role: UserRole.customer,
-                      icon: LucideIcons.shoppingCart,
+                      assetIcon: 'assets/icons/customer.png',
                       title: 'I\'m a Customer',
-                      subtitle: 'Shop for products and get them delivered',
-                      description:
-                          'Browse products from local vendors, add to cart, and get fresh items delivered to your doorstep.',
-                      color: const Color(0xFF53B175),
+                      subtitle:
+                          'Browse, discover, and purchase amazing products.',
+                      color: const Color(0xFF2563EB),
                     ),
                     const SizedBox(height: 16),
 
@@ -67,12 +63,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     _buildRoleCard(
                       context,
                       role: UserRole.vendor,
-                      icon: LucideIcons.store,
+                      assetIcon: 'assets/icons/vendor.png',
                       title: 'I\'m a Vendor',
-                      subtitle: 'Sell products and manage my store',
-                      description:
-                          'List your products, manage orders, track sales, and grow your business with our vendor tools.',
-                      color: const Color(0xFF2563EB),
+                      subtitle: 'Set up your shop and sell to our community.',
+                      color: const Color(0xFF22C55E),
                     ),
                   ],
                 ),
@@ -123,10 +117,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   Widget _buildRoleCard(
     BuildContext context, {
     required UserRole role,
-    required IconData icon,
+    required String assetIcon,
     required String title,
     required String subtitle,
-    required String description,
     required Color color,
   }) {
     final theme = Theme.of(context);
@@ -141,31 +134,26 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? color : theme.colorScheme.outline,
+            color: isSelected ? color : const Color(0xFFE5E7EB),
             width: isSelected ? 2 : 1,
           ),
-          color: isSelected ? color.withOpacity(0.05) : theme.cardColor,
+          color: Colors.white,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 24,
+                  ClipOval(
+                    child: Image.asset(
+                      assetIcon,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -175,17 +163,17 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       children: [
                         Text(
                           title,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? color
-                                : theme.colorScheme.onSurface,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         Text(
                           subtitle,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                            color: const Color(0xFF6B7280),
                           ),
                         ),
                       ],
@@ -193,27 +181,36 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   ),
                   if (isSelected)
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 26,
+                      height: 26,
                       decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(12),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: color, width: 2),
                       ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 16,
+                      child: Center(
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: color,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFCBD5E1),
+                          width: 1.5,
+                        ),
                       ),
                     ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                description,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.4,
-                ),
               ),
             ],
           ),
