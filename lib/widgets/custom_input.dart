@@ -18,6 +18,8 @@ class CustomInput extends StatefulWidget {
   final TextInputAction? textInputAction;
   final VoidCallback? onTap;
   final bool readOnly;
+  final FocusNode? focusNode;
+  final VoidCallback? onFocusChange;
 
   const CustomInput({
     super.key,
@@ -38,6 +40,8 @@ class CustomInput extends StatefulWidget {
     this.textInputAction,
     this.onTap,
     this.readOnly = false,
+    this.focusNode,
+    this.onFocusChange,
   });
 
   @override
@@ -87,38 +91,39 @@ class _CustomInputState extends State<CustomInput> {
         const SizedBox(height: 8),
         TextFormField(
           controller: _controller,
-          onChanged: widget.onChanged,
-          onFieldSubmitted: widget.onSubmitted,
-          keyboardType: widget.keyboardType,
-          obscureText: widget.obscureText ? _isObscured : false,
-          enabled: widget.enabled,
-          maxLines: widget.maxLines,
-          maxLength: widget.maxLength,
-          textCapitalization: widget.textCapitalization,
-          textInputAction: widget.textInputAction,
-          onTap: widget.onTap,
-          readOnly: widget.readOnly,
-          style: theme.textTheme.bodyLarge,
-          decoration: InputDecoration(
-            hintText: widget.hint,
-            prefixIcon: widget.prefixIcon,
-            suffixIcon: widget.obscureText
-                ? IconButton(
-                    icon: Icon(
-                      _isObscured ? Icons.visibility : Icons.visibility_off,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isObscured = !_isObscured;
-                      });
-                    },
-                  )
-                : widget.suffixIcon,
-            errorText: widget.errorText,
-            counterText: widget.maxLength != null ? null : '',
+          focusNode: widget.focusNode,
+            onChanged: widget.onChanged,
+            onFieldSubmitted: widget.onSubmitted,
+            keyboardType: widget.keyboardType,
+            obscureText: widget.obscureText ? _isObscured : false,
+            enabled: widget.enabled,
+            maxLines: widget.maxLines,
+            maxLength: widget.maxLength,
+            textCapitalization: widget.textCapitalization,
+            textInputAction: widget.textInputAction,
+            onTap: widget.onTap,
+            readOnly: widget.readOnly,
+            style: theme.textTheme.bodyLarge,
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              prefixIcon: widget.prefixIcon,
+              suffixIcon: widget.obscureText
+                  ? IconButton(
+                      icon: Icon(
+                        _isObscured ? Icons.visibility : Icons.visibility_off,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isObscured = !_isObscured;
+                        });
+                      },
+                    )
+                  : widget.suffixIcon,
+              errorText: widget.errorText,
+              counterText: widget.maxLength != null ? null : '',
+            ),
           ),
-        ),
       ],
     );
   }

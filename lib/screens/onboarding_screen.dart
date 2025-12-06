@@ -15,18 +15,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingPage> _pages = [
     OnboardingPage(
-      iconPath: 'assets/icons/shop_smart.png',
+      iconPath: 'assets/animations/Shop_smart.gif',
       title: 'Shop Smart',
       description:
-          'Discover fresh products from local vendors and get them delivered to your doorstep.',
+          'Connect with local vendors and discover exclusive deals near you.',
       color: const Color(0xFF53B175),
+      isGif: true,
     ),
     OnboardingPage(
-      iconPath: 'assets/icons/sell_easy.png',
+      iconPath: 'assets/animations/Sell_easy.gif',
       title: 'Sell Easy',
       description:
           'Manage your store, track sales, and grow your business with our vendor tools.',
       color: const Color(0xFF2563EB),
+      isGif: true,
     ),
     OnboardingPage(
       iconPath: 'assets/icons/fast_delivery.png',
@@ -34,6 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           'Quick and reliable delivery service to ensure your orders reach you fresh.',
       color: const Color(0xFFF59E0B),
+      isGif: false,
     ),
   ];
 
@@ -44,12 +47,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _nextPage() {
+    debugPrint('_nextPage called, currentPage: $_currentPage, totalPages: ${_pages.length}');
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     } else {
+      debugPrint('Navigating to login screen');
       Get.offAllNamed('/auth/login');
     }
   }
@@ -63,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -120,7 +125,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.outline,
+                              : const Color(0xFFE0E0E0),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -135,6 +140,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         : 'Next',
                     onPressed: _nextPage,
                     width: double.infinity,
+                    borderRadius: 24,
+                    icon: _currentPage == _pages.length - 1
+                        ? null
+                        : const Icon(
+                            Icons.arrow_forward,
+                            size: 20,
+                          ),
                   ),
                 ],
               ),
@@ -149,51 +161,69 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: page.color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(60),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Image.asset(
-                page.iconPath,
-                width: 80,
-                height: 80,
-                fit: BoxFit.contain,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Center(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 48),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Illustration/GIF
+              SizedBox(
+                width: double.infinity,
+                height: 280,
+                child: page.isGif
+                    ? Image.asset(
+                        page.iconPath,
+                        fit: BoxFit.contain,
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.all(40),
+                        child: Image.asset(
+                          page.iconPath,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 32),
 
-          // Title
-          Text(
-            page.title,
-            style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.onSurface,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
+              // Title
+              Text(
+                page.title,
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF333333),
+                  fontSize: 28,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
 
-          // Description
-          Text(
-            page.description,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
+              // Description
+              Text(
+                page.description,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: const Color(0xFF666666),
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -204,11 +234,13 @@ class OnboardingPage {
   final String title;
   final String description;
   final Color color;
+  final bool isGif;
 
   OnboardingPage({
     required this.iconPath,
     required this.title,
     required this.description,
     required this.color,
+    this.isGif = false,
   });
 }

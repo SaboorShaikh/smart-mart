@@ -17,13 +17,58 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocusNode = FocusNode();
   bool _isLoading = false;
+  bool _emailHasBeenTouched = false;
+  String? _emailError;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailFocusNode.addListener(_onEmailFocusChange);
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.removeListener(_onEmailFocusChange);
+    _emailFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onEmailFocusChange() {
+    if (!_emailFocusNode.hasFocus) {
+      // User has left the email field
+      if (_emailHasBeenTouched) {
+        _validateEmail();
+      }
+    }
+  }
+
+  bool _isValidEmail(String email) {
+    if (email.isEmpty) return false;
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    return emailRegex.hasMatch(email.trim());
+  }
+
+  void _validateEmail() {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() {
+        _emailError = null;
+      });
+    } else if (!_isValidEmail(email)) {
+      setState(() {
+        _emailError = 'Not correct email';
+      });
+    } else {
+      setState(() {
+        _emailError = null;
+      });
+    }
   }
 
   Future<void> _handleLogin() async {
@@ -87,32 +132,52 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // Animated Logo
-              _AnimatedLogo(
-                width: 80,
-                height: 80,
-              ),
-              const SizedBox(height: 24),
-
-              // Header
-              Text(
-                'Welcome Back',
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                  fontSize: 28,
+              // White Background Panel for Logo and Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
+                child: Column(
+                  children: [
+                    // Animated Logo
+                    _AnimatedLogo(
+                      width: 80,
+                      height: 80,
+                    ),
+                    const SizedBox(height: 24),
 
-              Text(
-                'Log in to continue.',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF666666),
-                  fontSize: 16,
+                    // Header
+                    Text(
+                      'Welcome Back',
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                        fontSize: 28,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+
+                    Text(
+                      'Log in to continue.',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: const Color(0xFF666666),
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
 
@@ -127,9 +192,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       label: 'Email Address',
                       hint: 'example@gmail.com',
                       value: _emailController.text,
+                      focusNode: _emailFocusNode,
                       onChanged: (value) {
                         setState(() {
                           _emailController.text = value;
+                          if (!_emailHasBeenTouched) {
+                            _emailHasBeenTouched = true;
+                          }
+                          // Clear error while typing
+                          if (_emailError != null) {
+                            _emailError = null;
+                          }
                         });
                       },
                       keyboardType: TextInputType.emailAddress,
@@ -138,10 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         LucideIcons.mail,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      errorText: _emailController.text.isNotEmpty &&
-                              !_emailController.text.contains('@')
-                          ? 'Please enter a valid email'
-                          : null,
+                      errorText: _emailError,
                     ),
                     const SizedBox(height: 20),
 
@@ -343,13 +413,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontSize: 14,
                     ),
                   ),
-                  InkWell(
-                    onTap: () {
-                      debugPrint(
-                          'Signup button tapped - using GetX navigation');
+                  TextButton(
+                    onPressed: () {
+                      debugPrint('Signup button tapped - navigating to role selection');
                       Get.toNamed('/auth/role-selection');
-                      debugPrint('GetX navigation completed');
                     },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: Text(
                       'Sign Up',
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -382,55 +455,14 @@ class _AnimatedLogo extends StatefulWidget {
   State<_AnimatedLogo> createState() => _AnimatedLogoState();
 }
 
-class _AnimatedLogoState extends State<_AnimatedLogo>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
-  late final Animation<double> _tilt;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    )..repeat(reverse: true);
-
-    _scale = Tween<double>(begin: 0.94, end: 1.02).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _tilt = Tween<double>(begin: -0.02, end: 0.02).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _AnimatedLogoState extends State<_AnimatedLogo> {
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.rotate(
-          angle: _tilt.value,
-          child: Transform.scale(
-            scale: _scale.value,
-            child: ClipOval(
-              child: Image.asset(
-                'assets/icons/logo_bg_removed.png',
-                width: widget.width,
-                height: widget.height,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        );
-      },
+    return Image.asset(
+      'assets/animations/Logo_animation.gif',
+      width: widget.width,
+      height: widget.height,
+      fit: BoxFit.contain,
     );
   }
 }

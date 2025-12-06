@@ -156,7 +156,7 @@ class _SplashScreenState extends State<SplashScreen>
                         children: [
                           // Logo Icon
                           Image.asset(
-                            'assets/icons/logo_bg_removed.png',
+                            'assets/animations/Logo_animation.gif',
                             width: 80,
                             height: 80,
                             fit: BoxFit.contain,

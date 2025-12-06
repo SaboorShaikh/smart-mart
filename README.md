@@ -200,12 +200,15 @@ lib/
 │   │   ├── orders_screen.dart         # Order history & tracking
 │   │   ├── profile_screen.dart        # User profile & settings
 │   │   ├── edit_profile_screen.dart   # Profile editing
+│   │   ├── my_details_screen.dart     # Personal details management
 │   │   ├── notifications_screen.dart  # Notification center
 │   │   ├── addresses_screen.dart      # Address management
-│   │   └── add_edit_address_screen.dart
+│   │   ├── add_edit_address_screen.dart # Add/edit delivery addresses
+│   │   └── add_payment_method_screen.dart # Payment method management
 │   │
 │   └── vendor/                        # Vendor interface
-│       ├── vendor_home_screen.dart    # Dashboard with analytics
+│       ├── vendor_main_screen.dart    # Main vendor dashboard
+│       ├── vendor_home_screen.dart    # Home dashboard with analytics
 │       ├── products_screen.dart       # Product list with edit/delete
 │       ├── add_product_screen.dart    # Legacy add product
 │       ├── add_product_stepper_screen.dart  # 6-step wizard (add/edit)
@@ -216,10 +219,14 @@ lib/
 │       ├── add_product_step5_screen.dart    # Nutrition information
 │       ├── add_product_step6_screen.dart    # Tags & metadata
 │       ├── orders_screen.dart         # Vendor order management
-│       ├── pos_screen.dart            # Point of sale system
+│       ├── pos/                        # POS system
+│       │   ├── pos_screen.dart        # Point of sale interface
+│       │   └── pos_controller.dart    # POS business logic
 │       ├── profile_screen.dart        # Vendor profile
 │       ├── vendor_analytics_screen.dart # Analytics dashboard
-│       └── store_settings_screen.dart # Store configuration
+│       ├── store_settings_screen.dart # Store configuration
+│       ├── help_and_support_screen.dart # Help & support
+│       └── test_stepper_screen.dart   # Testing component
 │
 ├── widgets/                            # Reusable components
 │   ├── custom_button.dart             # Styled button widget
@@ -232,14 +239,24 @@ lib/
 │   ├── sales_chart.dart               # Analytics visualization
 │   ├── shimmer.dart                   # YouTube-style shimmer with right-to-left diagonal gradient
 │   ├── skeleton_loaders.dart          # Skeleton loading components
-│   └── frosted_notification_banner.dart # Frosted glass notification banner
+│   ├── frosted_notification_banner.dart # Frosted glass notification banner
+│   ├── category_picker.dart           # Category selection widget
+│   ├── category_picker_fixed.dart     # Fixed category picker variant
+│   ├── city_picker.dart               # City selection widget
+│   ├── dynamic_city_picker.dart       # Dynamic city picker with state filtering
+│   ├── dynamic_state_picker.dart      # Dynamic state/region picker
+│   └── test_search.dart               # Search testing component
 │
 ├── services/                           # External integrations
 │   ├── firestore_service.dart         # Firestore CRUD operations
 │   ├── microsoft_oauth.dart           # Microsoft authentication
 │   ├── onedrive_storage_service.dart  # OneDrive integration
 │   ├── supabase_storage_service.dart  # Supabase image storage
-│   └── notification_service.dart     # Frosted notification banner service
+│   ├── supabase_test_service.dart     # Supabase testing utilities
+│   ├── bucket_test_service.dart       # Storage bucket testing
+│   ├── notification_service.dart      # Frosted notification banner service
+│   ├── image_upload_service.dart      # Image upload handling
+│   └── location_data_service.dart     # Location and geocoding services
 │
 ├── router/                             # Navigation
 │   └── app_router.dart                # GoRouter configuration (legacy)
@@ -954,13 +971,14 @@ For support and questions:
 
 ## 📊 App Statistics
 
-- **20+ Screens**: Comprehensive UI coverage
-- **9 Custom Widgets**: Reusable, maintainable components
-- **2 State Providers**: Centralized state management
-- **4 Service Layers**: Clean separation of concerns
+- **40+ Screens**: Comprehensive UI coverage for customers and vendors
+- **17+ Custom Widgets**: Reusable, maintainable components
+- **2 State Providers**: Centralized state management (AuthProvider, DataProvider)
+- **9 Service Layers**: Clean separation of concerns
 - **5 Data Models**: Well-structured data architecture
-- **30+ Routes**: Complete navigation system
-- **Multiple Asset Icons**: Custom iconography throughout
+- **30+ Routes**: Complete navigation system with GetX
+- **50+ Asset Icons**: Custom iconography throughout the app
+- **40+ Category Icons**: SVG category icons for product organization
 
 ## 🎓 Learning Resources
 
@@ -996,5 +1014,3 @@ This project demonstrates:
 [Report Bug](https://github.com/your-repo/issues) · [Request Feature](https://github.com/your-repo/issues) · [Documentation](https://github.com/your-repo/wiki)
 
 </div>
-# smart-mart
-# smart-mart
