@@ -64,7 +64,8 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
     final nameOk = _name.text.trim().isNotEmpty;
     final emailOk = _isValidEmail(_email.text);
     final passOk = _password.text.length >= 6;
-    final matchOk = _password.text == _confirmPassword.text && _confirmPassword.text.isNotEmpty;
+    final matchOk = _password.text == _confirmPassword.text &&
+        _confirmPassword.text.isNotEmpty;
     return nameOk && emailOk && passOk && matchOk;
   }
 
@@ -86,8 +87,7 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.2),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
         color: const Color(0xFF4B5563),
         fontWeight: FontWeight.w600,
@@ -121,23 +121,23 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                 Center(
                   child: Column(
                     children: [
-                    Text(
-                      'Account Details',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF111827),
-                        fontSize: 30,
+                      Text(
+                        'Account Details',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF111827),
+                          fontSize: 30,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Create your login credentials',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 6),
+                      Text(
+                        'Create your login credentials',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
                     ],
                   ),
                 ),
@@ -169,7 +169,7 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                             keyboardType: TextInputType.name,
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
-                            hintText: 'Abdul Saboor',
+                              hintText: 'Abdul Saboor',
                             ),
                             onChanged: (_) => setState(() {}),
                             validator: (v) => (v == null || v.trim().isEmpty)
@@ -182,17 +182,16 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                             controller: _email,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            hintText: 'saboor@example.com',
-                            errorText: _emailError,
-                          ),
-                          onChanged: (_) => setState(() {
-                            _updateEmailError(showIfEmpty: false);
-                          }),
-                          validator: (v) =>
-                              (v == null || !_isValidEmail(v))
-                                  ? 'Enter a valid email'
-                                  : null,
+                            decoration: InputDecoration(
+                              hintText: 'saboor@example.com',
+                              errorText: _emailError,
+                            ),
+                            onChanged: (_) => setState(() {
+                              _updateEmailError(showIfEmpty: false);
+                            }),
+                            validator: (v) => (v == null || !_isValidEmail(v))
+                                ? 'Enter a valid email'
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           _buildLabel(theme, 'Password', required: true),

@@ -4,6 +4,11 @@
 
 **SmartMart** is a full-featured e-commerce solution built with Flutter, offering seamless experiences for both buyers and sellers. With advanced product management, real-time notifications, smart discount systems, and a carefully crafted modern UI, SmartMart sets a new standard for local marketplace applications.
 
+## 🆕 Recent Updates
+
+- Polished customer onboarding with the new fast-delivery animation.
+- Refreshed customer location and account detail flows with inline validation, animated controls, and fixed bottom actions.
+
 ## ✨ Highlights
 
 - 🎯 **Dual-Role System**: Seamlessly switch between customer and vendor accounts
