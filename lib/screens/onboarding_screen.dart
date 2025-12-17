@@ -31,12 +31,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       isGif: true,
     ),
     OnboardingPage(
-      iconPath: 'assets/icons/fast_delivery.png',
+      iconPath: 'assets/animations/Fast_delivery.gif',
       title: 'Fast Delivery',
       description:
           'Quick and reliable delivery service to ensure your orders reach you fresh.',
       color: const Color(0xFFF59E0B),
-      isGif: false,
+      isGif: true,
     ),
   ];
 
